@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Get notification count
+get_notification_count() {
+    count=$(makoctl list | jq '.data | length')
+    echo "$count"
+}
+
+# Get tooltip with recent notifications
+get_tooltip() {
+    makoctl list | jq -r '.data[] | .summary' | head -n 5 | sed ':a;N;$!ba;s/\n/\\n/g'
+}
+
+# Handle clicks
+case $1 in
+    "count")
+        get_notification_count
+        ;;
+    "tooltip")
+        get_tooltip
+        ;;
+    "show")
+        # Create a temporary file for notifications
+        TEMP_FILE="/tmp/notification_list.txt"
+        makoctl list | jq -r '.data[] | "📝 " + .summary' > "$TEMP_FILE"
+        
+        # Show wofi menu with notifications
+        selected=$(wofi --dmenu --cache-file=/dev/null < "$TEMP_FILE")
+        
+        if [ ! -z "$selected" ]; then
+            # Get the index of selected notification
+            index=$(grep -n "^$selected$" "$TEMP_FILE" | cut -d: -f1)
+            index=$((index - 1))
+            
+            # Show the full notification content
+            notification=$(makoctl list | jq -r ".data[$index] | .body")
+            notify-send "Notification Details" "$notification"
+        fi
+        
+        rm "$TEMP_FILE"
+        ;;
+esac
