@@ -60,7 +60,7 @@ data = {}
 
 
 # Read city from config file
-config_file = os.path.expanduser('~/.config/hypr/hyprv.conf')
+config_file = os.path.expanduser('~/.config/HyprV/hyprv.conf')
 city = None
 try:
     with open(config_file, 'r') as f:
