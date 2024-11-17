@@ -107,3 +107,8 @@ tooltip label{
 #custom-launch_kitty {
     font-size: 20px;
 }
+
+#custom-notification {
+    color: #407cdd;
+    margin-right: 10px;
+}

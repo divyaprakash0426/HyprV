@@ -128,3 +128,9 @@ tooltip label{
     border-left: 0px;
     border-right: 0px;
 }
+
+#custom-notification {
+    color: #407cdd;
+    border-radius: 10px;
+    margin-right: 10px;
+}

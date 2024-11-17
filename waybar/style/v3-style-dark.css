@@ -133,3 +133,9 @@ tooltip label{
     color: #a6e3a1;
     border-left: 0px;
 }
+
+#custom-notification {
+    color: #89b4fa;
+    border-radius: 10px;
+    margin-right: 10px;
+}
