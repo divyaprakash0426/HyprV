@@ -21,6 +21,7 @@
         "custom/power_btn"
     ],
     "modules-right": [
+        "custom/notification",
         "temperature",
         "custom/power_profile",
         "battery",

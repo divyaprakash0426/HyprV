@@ -13,6 +13,7 @@
     ],
     "modules-center": ["hyprland/window"],
     "modules-right": [
+        "custom/notification",
         "network",
         "bluetooth",
         "temperature",
