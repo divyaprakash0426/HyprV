@@ -3,7 +3,12 @@
 # Get notification count
 get_notification_count() {
     count=$(makoctl list | jq '.data | length')
-    echo "$count"
+    icon="󰂛"  # icon for no notifications
+    if [ "$count" -gt 0 ]; then
+        icon="󰂚"  # icon for having notifications
+    fi
+    # Output proper JSON format
+    echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"class\": \"$icon\"}"
 }
 
 # Get tooltip with recent notifications
