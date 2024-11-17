@@ -1,9 +1,15 @@
 #!/usr/bin/env python
+"""
+Waybar weather module script that fetches weather data from wttr.in
+Displays current weather with emoji and temperature in the bar
+Shows detailed forecast in the tooltip
+"""
 
 import json
 import requests
 from datetime import datetime
 
+# Dictionary mapping wttr.in weather codes to emoji representations
 WEATHER_CODES = {
     '113': '☀️ ',
     '116': '⛅',
@@ -55,21 +61,25 @@ WEATHER_CODES = {
     '395': '❄️ '
 }
 
+# Initialize data dictionary for waybar output
 data = {}
 
-
+# Fetch weather data from wttr.in for Gurugram in JSON format
 weather = requests.get("https://wttr.in/Gurugram?format=j1").json()
 
 
 def format_time(time):
+    """Format hour time by removing trailing zeros and ensuring 2 digits"""
     return time.replace("00", "").zfill(2)
 
 
 def format_temp(temp):
+    """Format temperature with degree symbol and left padding"""
     return (hour['FeelsLikeC']+"°").ljust(3)
 
 
 def format_chances(hour):
+    """Calculate and format probability of various weather conditions"""
     chances = {
         "chanceoffog": "Fog",
         "chanceoffrost": "Frost",
@@ -87,15 +97,19 @@ def format_chances(hour):
             conditions.append(chances[event]+" "+hour[event]+"%")
     return ", ".join(conditions)
 
+# Handle special formatting for positive single-digit temperatures
 tempint = int(weather['current_condition'][0]['FeelsLikeC'])
 extrachar = ''
 if tempint > 0 and tempint < 10:
-    extrachar = '+'
+    extrachar = '+'  # Add plus sign for positive single digits
+
+# Prepare the main display text for waybar
 
 
 data['text'] = ' '+WEATHER_CODES[weather['current_condition'][0]['weatherCode']] + \
     " "+extrachar+weather['current_condition'][0]['FeelsLikeC']+"°"
 
+# Build detailed tooltip with current conditions and forecast
 data['tooltip'] = f"<b>{weather['current_condition'][0]['weatherDesc'][0]['value']} {weather['current_condition'][0]['temp_C']}°</b>\n"
 data['tooltip'] += f"Feels like: {weather['current_condition'][0]['FeelsLikeC']}°\n"
 data['tooltip'] += f"Wind: {weather['current_condition'][0]['windspeedKmph']}Km/h\n"
