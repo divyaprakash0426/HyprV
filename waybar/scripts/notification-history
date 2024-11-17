@@ -3,9 +3,13 @@
 # Get notification count
 get_notification_count() {
     if makoctl list &>/dev/null; then
-        count=$(makoctl list | jq '.data | length')
-        if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
-            echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"alt\": \"notification\"}"
+        active_count=$(makoctl list | jq '.data | length')
+        history_count=$(makoctl history | jq '.data | length')
+        
+        total_count=$((active_count + history_count))
+        
+        if [ "$total_count" -gt 0 ] && [ "$total_count" != "null" ]; then
+            echo "{\"text\": \"$total_count\", \"tooltip\": \"$total_count notifications\", \"alt\": \"notification\"}"
         else
             echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
         fi
@@ -29,17 +33,20 @@ case $1 in
         ;;
     "show")
         if makoctl list &>/dev/null; then
-            count=$(makoctl list | jq '.data | length')
+            # Combine active and history notifications
+            notifications=$( (makoctl list; makoctl history) | jq -s '.[0].data + .[1].data')
+            count=$(echo "$notifications" | jq '. | length')
+            
             if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
-                # Get notifications directly from makoctl and pipe to wofi
-                selected=$(makoctl list | jq -r '.data[] | "📝 " + .summary' | wofi --dmenu --cache-file=/dev/null)
+                # Get notifications and pipe to wofi
+                selected=$(echo "$notifications" | jq -r '.[] | "📝 " + .summary' | wofi --dmenu --cache-file=/dev/null)
                 
                 if [ ! -z "$selected" ]; then
                     # Remove the emoji prefix for matching
                     clean_selected="${selected#📝 }"
                     
                     # Get the notification body using the summary to match
-                    notification=$(makoctl list | jq -r ".data[] | select(.summary == \"$clean_selected\") | .body")
+                    notification=$(echo "$notifications" | jq -r ".[] | select(.summary == \"$clean_selected\") | .body")
                     notify-send "Notification Details" "$notification"
                 fi
             else
