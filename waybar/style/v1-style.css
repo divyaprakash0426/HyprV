@@ -162,4 +162,10 @@ tooltip label{
     color: #407cdd;
     border-radius: 10px;
     margin-right: 10px;
+    background: #e7e7ec;
+    opacity: 0.8;
+    padding: 0px 10px;
+    margin: 3px 0px;
+    margin-top: 10px;
+    border: 0px;
 }
