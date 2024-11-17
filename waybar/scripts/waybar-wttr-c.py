@@ -68,15 +68,19 @@ data = {}
 # Fetch weather data from wttr.in for Gurugram in JSON format
 # Read city from config file
 config_file = os.path.expanduser('~/.config/hypr/hyprv.conf')
-city = "Gurugram"  # Default city
+city = None
 try:
     with open(config_file, 'r') as f:
         for line in f:
             if line.startswith('SET_CITY='):
                 city = line.split('=')[1].strip().strip('"')
                 break
+    if not city:
+        print(json.dumps({"text": "❌", "tooltip": "City not set in hyprv.conf"}))
+        exit(1)
 except FileNotFoundError:
-    pass
+    print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
+    exit(1)
 
 weather = requests.get(f"https://wttr.in/{city}?format=j1").json()
 
