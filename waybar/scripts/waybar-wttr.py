@@ -2,6 +2,7 @@
 
 import json
 import requests
+import os
 from datetime import datetime
 
 WEATHER_CODES = {
@@ -58,7 +59,19 @@ WEATHER_CODES = {
 data = {}
 
 
-weather = requests.get("https://wttr.in/Gurugram?format=j1").json()
+# Read city from config file
+config_file = os.path.expanduser('~/.config/hypr/hyprv.conf')
+city = "Gurugram"  # Default city
+try:
+    with open(config_file, 'r') as f:
+        for line in f:
+            if line.startswith('SET_CITY='):
+                city = line.split('=')[1].strip().strip('"')
+                break
+except FileNotFoundError:
+    pass
+
+weather = requests.get(f"https://wttr.in/{city}?format=j1").json()
 
 
 def format_time(time):
