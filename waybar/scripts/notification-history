@@ -34,16 +34,16 @@ case $1 in
     "show")
         if makoctl list &>/dev/null; then
             # Combine active and history notifications with proper JSON path
-            notifications=$( (makoctl list; makoctl history) | jq -s '[.[].data[]][0] | map({summary: .summary.data, body: .body.data})')
+            notifications=$( (makoctl list; makoctl history) | jq -s '[.[].data[]][0] | map({summary: .summary.data, body: .body.data, app_icon: (."app-icon".data // "")})')
             count=$(echo "$notifications" | jq '. | length')
             
             if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
-                # Get notifications and pipe to wofi
-                selected=$(echo "$notifications" | jq -r '.[] | "📝 " + .summary' | wofi --dmenu --cache-file=/dev/null)
+                # Get notifications with icons and pipe to wofi
+                selected=$(echo "$notifications" | jq -r '.[] | .app_icon + "\t" + .summary' | wofi --dmenu --cache-file=/dev/null --define "image-size=24" --show-icons)
                 
                 if [ ! -z "$selected" ]; then
-                    # Remove the emoji prefix for matching
-                    clean_selected="${selected#📝 }"
+                    # Remove the icon path and tab for matching
+                    clean_selected="${selected#*$'\t'}"
                     
                     # Get the notification body using the summary to match
                     notification=$(echo "$notifications" | jq -r ".[] | select(.summary == \"$clean_selected\") | .body")
