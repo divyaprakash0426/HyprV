@@ -3,7 +3,7 @@
 # Get history notification count
 get_notification_count() {
     if makoctl history &>/dev/null; then
-        history_count=$(makoctl history | jq '.data | length')
+        history_count=$(makoctl history | jq '.data[0] | length')
         
         if [ "$history_count" -gt 0 ] && [ "$history_count" != "null" ]; then
             echo "{\"text\": \"$history_count\", \"tooltip\": \"$history_count notifications in history\", \"alt\": \"notification\"}"
@@ -17,7 +17,7 @@ get_notification_count() {
 
 # Get tooltip with recent history notifications
 get_tooltip() {
-    makoctl history | jq -r '.data[] | .summary.data' | head -n 5 | sed ':a;N;$!ba;s/\n/\\n/g'
+    makoctl history | jq -r '.data[0][] | .summary.data' | head -n 5 | sed ':a;N;$!ba;s/\n/\\n/g'
 }
 
 # Handle clicks
