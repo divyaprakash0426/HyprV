@@ -178,7 +178,7 @@
             "dnd-inhibited-none": ""
         },
         "return-type": "json",
-        "exec-if": "which swaync-client",
+        "exec-if": "which makoctl",
         "exec": "~/.config/HyprV/waybar/scripts/notification-history count",
         "on-click": "~/.config/HyprV/waybar/scripts/notification-history show",
         "interval": 1
