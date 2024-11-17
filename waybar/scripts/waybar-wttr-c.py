@@ -77,10 +77,10 @@ try:
                 break
     if not city:
         print(json.dumps({"text": "❌", "tooltip": "City not set in hyprv.conf"}))
-        exit(1)
+        exit(0)
 except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
-    exit(1)
+    exit(0)
 
 weather = requests.get(f"https://wttr.in/{city}?format=j1").json()
 
