@@ -2,12 +2,15 @@
 
 # Get notification count
 get_notification_count() {
-    count=$(makoctl list | jq '.data | length')
-    # Output proper JSON format
-    if [ "$count" -gt 0 ]; then
-        echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"alt\": \"notification\"}"
+    if makoctl list &>/dev/null; then
+        count=$(makoctl list | jq '.data | length')
+        if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
+            echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"alt\": \"notification\"}"
+        else
+            echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
+        fi
     else
-        echo "{\"text\": \"0\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
+        echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
     fi
 }
 
@@ -25,16 +28,25 @@ case $1 in
         get_tooltip
         ;;
     "show")
-        # Get notifications directly from makoctl and pipe to wofi
-        selected=$(makoctl list | jq -r '.data[] | "📝 " + .summary' | wofi --dmenu --cache-file=/dev/null)
-        
-        if [ ! -z "$selected" ]; then
-            # Remove the emoji prefix for matching
-            clean_selected="${selected#📝 }"
-            
-            # Get the notification body using the summary to match
-            notification=$(makoctl list | jq -r ".data[] | select(.summary == \"$clean_selected\") | .body")
-            notify-send "Notification Details" "$notification"
+        if makoctl list &>/dev/null; then
+            count=$(makoctl list | jq '.data | length')
+            if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
+                # Get notifications directly from makoctl and pipe to wofi
+                selected=$(makoctl list | jq -r '.data[] | "📝 " + .summary' | wofi --dmenu --cache-file=/dev/null)
+                
+                if [ ! -z "$selected" ]; then
+                    # Remove the emoji prefix for matching
+                    clean_selected="${selected#📝 }"
+                    
+                    # Get the notification body using the summary to match
+                    notification=$(makoctl list | jq -r ".data[] | select(.summary == \"$clean_selected\") | .body")
+                    notify-send "Notification Details" "$notification"
+                fi
+            else
+                notify-send "No Notifications" "Your notification tray is empty"
+            fi
+        else
+            notify-send "No Notifications" "Your notification tray is empty"
         fi
         ;;
 esac
