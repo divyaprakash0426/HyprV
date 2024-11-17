@@ -33,8 +33,8 @@ case $1 in
         ;;
     "show")
         if makoctl list &>/dev/null; then
-            # Combine active and history notifications
-            notifications=$( (makoctl list; makoctl history) | jq -s '.[0].data + .[1].data')
+            # Combine active and history notifications with proper JSON path
+            notifications=$( (makoctl list; makoctl history) | jq -s '[.[].data[]][0] | map({summary: .summary.data, body: .body.data})')
             count=$(echo "$notifications" | jq '. | length')
             
             if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
@@ -47,7 +47,11 @@ case $1 in
                     
                     # Get the notification body using the summary to match
                     notification=$(echo "$notifications" | jq -r ".[] | select(.summary == \"$clean_selected\") | .body")
-                    notify-send "Notification Details" "$notification"
+                    if [ ! -z "$notification" ]; then
+                        notify-send "Notification Details" "$notification"
+                    else
+                        notify-send "Notification Details" "No additional details available"
+                    fi
                 fi
             else
                 notify-send "No Notifications" "Your notification tray is empty"
