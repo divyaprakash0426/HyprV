@@ -1,26 +1,23 @@
 #!/bin/bash
 
-# Get notification count
+# Get history notification count
 get_notification_count() {
-    if makoctl list &>/dev/null; then
-        active_count=$(makoctl list | jq '.data | length')
+    if makoctl history &>/dev/null; then
         history_count=$(makoctl history | jq '.data | length')
         
-        total_count=$((active_count + history_count))
-        
-        if [ "$total_count" -gt 0 ] && [ "$total_count" != "null" ] && [ "$total_count" != "0" ]; then
-            echo "{\"text\": \"$total_count\", \"tooltip\": \"$total_count notifications\", \"alt\": \"notification\"}"
+        if [ "$history_count" -gt 0 ] && [ "$history_count" != "null" ]; then
+            echo "{\"text\": \"$history_count\", \"tooltip\": \"$history_count notifications in history\", \"alt\": \"notification\"}"
         else
-            echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
+            echo "{\"text\": \"\", \"tooltip\": \"No notification history\", \"alt\": \"none\"}"
         fi
     else
-        echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
+        echo "{\"text\": \"\", \"tooltip\": \"No notification history\", \"alt\": \"none\"}"
     fi
 }
 
-# Get tooltip with recent notifications
+# Get tooltip with recent history notifications
 get_tooltip() {
-    makoctl list | jq -r '.data[] | .summary' | head -n 5 | sed ':a;N;$!ba;s/\n/\\n/g'
+    makoctl history | jq -r '.data[] | .summary.data' | head -n 5 | sed ':a;N;$!ba;s/\n/\\n/g'
 }
 
 # Handle clicks
@@ -32,32 +29,35 @@ case $1 in
         get_tooltip
         ;;
     "show")
-        if makoctl list &>/dev/null; then
-            # Combine active and history notifications with proper JSON path
-            notifications=$( (makoctl list; makoctl history) | jq -s '[.[].data[]][0] | map({summary: .summary.data, body: .body.data, app_icon: (."app-icon".data // "")})')
-            count=$(echo "$notifications" | jq '. | length')
+        if makoctl history &>/dev/null; then
+            # Get history notifications
+            notifications=$(makoctl history | jq '.data[] | {summary: .summary.data, body: .body.data, app_icon: (."app-icon".data // "")}')
+            count=$(echo "$notifications" | jq -s '. | length')
             
             if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
-                # Get notifications with icons and pipe to wofi
-                selected=$(echo "$notifications" | jq -r '.[] | .app_icon + "\t" + .summary' | wofi --dmenu --cache-file=/dev/null --define "image-size=24" --show-icons)
+                # Format notifications for wofi
+                wofi_input=$(echo "$notifications" | jq -r '. | "\(.app_icon)\t\(.summary)"' | sed 's/^$//')
+                
+                # Show notifications in wofi
+                selected=$(echo -e "$wofi_input" | wofi --dmenu --cache-file=/dev/null --prompt="Notification History" --width=400 --height=200 --show-icons 2>/dev/null)
                 
                 if [ ! -z "$selected" ]; then
                     # Remove the icon path and tab for matching
                     clean_selected="${selected#*$'\t'}"
                     
                     # Get the notification body using the summary to match
-                    notification=$(echo "$notifications" | jq -r ".[] | select(.summary == \"$clean_selected\") | .body")
+                    notification=$(echo "$notifications" | jq -s -r ".[] | select(.summary == \"$clean_selected\") | .body")
                     if [ ! -z "$notification" ]; then
-                        notify-send "Notification Details" "$notification"
+                        notify-send "History Notification" "$notification"
                     else
-                        notify-send "Notification Details" "No additional details available"
+                        notify-send "History Notification" "No additional details available"
                     fi
                 fi
             else
-                notify-send "No Notifications" "Your notification tray is empty"
+                notify-send "No History" "Your notification history is empty"
             fi
         else
-            notify-send "No Notifications" "Your notification tray is empty"
+            notify-send "No History" "Your notification history is empty"
         fi
         ;;
 esac
