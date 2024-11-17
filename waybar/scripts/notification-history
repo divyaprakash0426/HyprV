@@ -8,7 +8,11 @@ get_notification_count() {
         icon="󰂚"  # icon for having notifications
     fi
     # Output proper JSON format
-    echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"class\": \"$icon\"}"
+    if [ "$count" -gt 0 ]; then
+        echo "{\"text\": \"$count\", \"tooltip\": \"$count notifications\", \"class\": \"notification\"}"
+    else
+        echo "{\"text\": \"0\", \"tooltip\": \"No notifications\", \"class\": \"none\"}"
+    fi
 }
 
 # Get tooltip with recent notifications
