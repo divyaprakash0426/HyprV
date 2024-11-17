@@ -134,16 +134,10 @@
 
     "custom/notification": {
         "tooltip": true,
-        "format": "{} {icon}",
+        "format": "{icon}",
         "format-icons": {
             "notification": "󰂚",
-            "none": "󰂛",
-            "dnd-notification": "󰂚 󰂠",
-            "dnd-none": "󰂛 󰂠",
-            "inhibited-notification": "󰂚",
-            "inhibited-none": "󰂛",
-            "dnd-inhibited-notification": "󰂚 󰂠",
-            "dnd-inhibited-none": "󰂛 󰂠"
+            "none": "󰂛"
         },
         "return-type": "json",
         "exec-if": "which makoctl",
