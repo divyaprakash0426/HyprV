@@ -1,6 +1,8 @@
 #!/bin/bash
+# Source the main configuration file
 . ~/.config/HyprV/hyprv.conf
 
+# Function to determine the current theme (light/dark) and set appropriate variables
 get_theme() {
     # Check which waybar theme is set
     THEMEIS=$(readlink -f ~/.config/waybar/style.css | cut -d '-' -f3)
@@ -15,6 +17,7 @@ get_theme() {
     fi
 }
 
+# Function to update system-wide theme settings (XFCE, GTK, icons)
 update_theme() {
     #set the xfce and GTK theme
     if [[ $VER == "v4" || $VERTO == "v4-" ]]; then
@@ -29,10 +32,13 @@ update_theme() {
     gsettings set org.gnome.desktop.interface gtk-theme "Adwaita$SWITCHTO"
 }
 
+# Function to get current HyprV version from waybar config symlink
 get_ver() {
     VER=$(readlink -f ~/.config/waybar/config.jsonc | cut -d '-' -f1 | cut -d '/' -f8)
 }
 
+# Function to restart waybar with appropriate configuration
+# Special handling for v4 which uses a bottom config
 restart_waybar() {
     #restart the waybar
     pkill waybar
@@ -46,6 +52,8 @@ restart_waybar() {
 
 }
 
+# Function to set the wallpaper based on current theme and version
+# Uses custom background if SET_BG is defined, otherwise uses default theme background
 set_current_background() {
     get_theme
     get_ver
@@ -62,6 +70,8 @@ set_current_background() {
     fi
 }
 
+# Function to switch between different HyprV versions (v1-v4)
+# Updates waybar, wofi themes, wallpaper, and SDDM background
 switch_version() {
     get_theme
     get_ver
@@ -110,24 +120,27 @@ switch_version() {
 
 }
 
+# Function to cycle through keyboard layouts for the specified keyboard
 switch_keyboard() {
     hyprctl switchxkblayout "$SET_KB" next
 }
 
-if [[ "$1" == "vswitch" ]]; then
+# Main script logic - handle different command line arguments
+if [[ "$1" == "vswitch" ]]; then  # Switch HyprV version
     switch_version
     update_theme
     restart_waybar
-elif [[ "$1" == "setbg" ]]; then
+elif [[ "$1" == "setbg" ]]; then  # Set background/wallpaper
     set_current_background
     update_theme
     restart_waybar
-elif [[ "$1" == "swkb" ]]; then
+elif [[ "$1" == "swkb" ]]; then  # Switch keyboard layout
     switch_keyboard
     restart_waybar
 fi
 
-# need to show the version and tooltip
+# Get current version and prepare tooltip with keybind information
+# This output is used by waybar to display version and keybinds
 get_ver
 
 TOOLTIP='Default Keybinds\n'\
