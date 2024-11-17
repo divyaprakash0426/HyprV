@@ -8,7 +8,7 @@ get_notification_count() {
         
         total_count=$((active_count + history_count))
         
-        if [ "$total_count" -gt 0 ] && [ "$total_count" != "null" ]; then
+        if [ "$total_count" -gt 0 ] && [ "$total_count" != "null" ] && [ "$total_count" != "0" ]; then
             echo "{\"text\": \"$total_count\", \"tooltip\": \"$total_count notifications\", \"alt\": \"notification\"}"
         else
             echo "{\"text\": \"\", \"tooltip\": \"No notifications\", \"alt\": \"none\"}"
