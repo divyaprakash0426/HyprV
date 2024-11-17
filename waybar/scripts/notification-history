@@ -31,15 +31,20 @@ case $1 in
     "show")
         if makoctl history &>/dev/null; then
             # Get history notifications
-            notifications=$(makoctl history | jq '.data[] | {summary: .summary.data, body: .body.data, app_icon: (."app-icon".data // "")}')
-            count=$(echo "$notifications" | jq -s '. | length')
+            notifications=$(makoctl history | jq '.data[0][] | {summary: .summary.data, body: .body.data, app_icon: (."app-icon".data // "")}')
             
-            if [ "$count" -gt 0 ] && [ "$count" != "null" ]; then
+            if [ ! -z "$notifications" ]; then
                 # Format notifications for wofi
-                wofi_input=$(echo "$notifications" | jq -r '. | "\(.app_icon)\t\(.summary)"' | sed 's/^$//')
+                wofi_input=$(echo "$notifications" | jq -r '. | "\(.app_icon)\t\(.summary)"')
+                
+                # Debug output
+                echo "Debug: Notifications JSON:" >&2
+                echo "$notifications" >&2
+                echo "Debug: Wofi input:" >&2
+                echo "$wofi_input" >&2
                 
                 # Show notifications in wofi
-                selected=$(echo -e "$wofi_input" | wofi --dmenu --cache-file=/dev/null --prompt="Notification History" --width=400 --height=200 --show-icons 2>/dev/null)
+                selected=$(echo "$wofi_input" | wofi --dmenu --cache-file=/dev/null --prompt="Notification History" --width=400 --height=200 --show-icons 2>/dev/null)
                 
                 if [ ! -z "$selected" ]; then
                     # Remove the icon path and tab for matching
