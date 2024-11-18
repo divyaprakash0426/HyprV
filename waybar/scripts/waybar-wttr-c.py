@@ -162,13 +162,13 @@ feels_like = current['feels_like']
 weather_id = current['weather'][0]['id']
 
 # Handle special formatting for positive single-digit temperatures
-tempint = int(weather['current'][0]['feels_like'])
+tempint = int(weather['current']['feels_like'])
 extrachar = ''
 if tempint > 0 and tempint < 10:
     extrachar = '+'  # Add plus sign for positive single digits
 
-data['text'] = ' '+WEATHER_CODES[weather['current'][0]['weatherCode']] + \
-    " "+extrachar+weather['current'][0]['feels_like']+"°"
+data['text'] = ' '+get_weather_emoji(weather['current']['weather'][0]['id'] + \
+    " "+extrachar+str(round)(weather['current']['feels_like']))+"°"
 
 # Build detailed tooltip with current conditions and forecast
 aqi = get_aqi(lat, lon)
