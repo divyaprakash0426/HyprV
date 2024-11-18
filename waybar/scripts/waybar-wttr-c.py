@@ -71,7 +71,7 @@ try:
     lon = geo_data[0]['lon']
     
     # Get current weather and forecast
-    weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
+    weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
     weather_response = requests.get(weather_url)
     weather_response.raise_for_status()
     weather = weather_response.json()
