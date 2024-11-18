@@ -76,34 +76,36 @@ except requests.RequestException as e:
     exit(0)
 
 
-def format_time(time):
-    """Format hour time by removing trailing zeros and ensuring 2 digits"""
-    return time.replace("00", "").zfill(2)
-
+def format_time(timestamp):
+    """Format timestamp to hour:minute"""
+    return datetime.fromtimestamp(timestamp).strftime("%H:%M")
 
 def format_temp(temp):
-    """Format temperature with degree symbol and left padding"""
-    return (hour['FeelsLikeC']+"°").ljust(3)
+    """Format temperature with degree symbol"""
+    return f"{temp:.1f}°"
 
-
-def format_chances(hour):
-    """Calculate and format probability of various weather conditions"""
-    chances = {
-        "chanceoffog": "Fog",
-        "chanceoffrost": "Frost",
-        "chanceofovercast": "Overcast",
-        "chanceofrain": "Rain",
-        "chanceofsnow": "Snow",
-        "chanceofsunshine": "Sunshine",
-        "chanceofthunder": "Thunder",
-        "chanceofwindy": "Wind"
-    }
-
+def format_chances(hour_data):
+    """Format weather probabilities from OpenWeatherMap data"""
     conditions = []
-    for event in chances.keys():
-        if int(hour[event]) > 0:
-            conditions.append(chances[event]+" "+hour[event]+"%")
+    
+    if 'pop' in hour_data and hour_data['pop'] > 0:
+        conditions.append(f"Rain {int(hour_data['pop'] * 100)}%")
+    
+    if 'clouds' in hour_data and hour_data['clouds'] > 50:
+        conditions.append(f"Clouds {hour_data['clouds']}%")
+        
     return ", ".join(conditions)
+
+def get_weather_emoji(weather_id):
+    """Get weather emoji based on OpenWeatherMap condition code"""
+    code_str = str(weather_id)
+    
+    # First try exact match
+    if code_str in WEATHER_CODES:
+        return WEATHER_CODES[code_str]
+    
+    # Then try category match (first digit)
+    return WEATHER_CODES.get(code_str[0], "❓")
 
 def get_aqi(lat, lon):
     """Fetch AQI data using OpenWeatherMap API"""
