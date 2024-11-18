@@ -159,41 +159,55 @@ data['text'] = ' '+WEATHER_CODES[weather['current_condition'][0]['weatherCode'
     " "+extrachar+weather['current_condition'][0]['FeelsLikeC']+"°"
 
 # Build detailed tooltip with current conditions and forecast
-# Get additional data
-aqi = get_aqi(weather['nearest_area'][0]['latitude'], weather['nearest_area'][0]['longitude'])
-next_full, next_half = get_moon_phases()
+aqi = get_aqi(lat, lon)
+next_full, next_new = get_moon_phases()
 ekadashi = get_ekadashi_info()
 
 data['tooltip'] = f"<b>{city}</b>\n"
-data['tooltip'] += f"<b>{weather['current_condition'][0]['weatherDesc'][0]['value']} {weather['current_condition'][0]['temp_C']}°</b>\n"
-data['tooltip'] += f"Feels like: {weather['current_condition'][0]['FeelsLikeC']}°\n"
-data['tooltip'] += f"Wind: {weather['current_condition'][0]['windspeedKmph']}Km/h\n"
-data['tooltip'] += f"Humidity: {weather['current_condition'][0]['humidity']}%\n"
+data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {temp:.1f}°</b>\n"
+data['tooltip'] += f"Feels like: {feels_like:.1f}°\n"
+data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
+data['tooltip'] += f"Humidity: {current['humidity']}%\n"
 data['tooltip'] += f"AQI: {aqi}/5\n\n"
 
 # Add moon and Ekadashi section
 data['tooltip'] += "🌕 <b>Moon Phases</b>\n"
 data['tooltip'] += f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}\n"
-data['tooltip'] += f"Next New Moon: {next_half.strftime('%Y-%m-%d')}\n\n"
+data['tooltip'] += f"Next New Moon: {next_new.strftime('%Y-%m-%d')}\n\n"
 
 data['tooltip'] += "🕉️ <b>Ekadashi</b>\n"
 data['tooltip'] += f"Next: {ekadashi['type']}\n"
 data['tooltip'] += f"Date: {ekadashi['next_ekadashi'].strftime('%Y-%m-%d')}\n"
 data['tooltip'] += f"Start: {ekadashi['start_time']}, End: {ekadashi['end_time']}\n\n"
-for i, day in enumerate(weather['weather']):
+
+# Daily forecast
+for i, day in enumerate(weather['daily'][:3]):
     data['tooltip'] += "\n<b>"
+    forecast_date = datetime.fromtimestamp(day['dt'])
     if i == 0:
         data['tooltip'] += "Today, "
-    if i == 1:
+    elif i == 1:
         data['tooltip'] += "Tomorrow, "
-    data['tooltip'] += f"{day['date']}</b>\n"
-    data['tooltip'] += f"⬆️ {day['maxtempC']}° ⬇️ {day['mintempC']}° "
-    data['tooltip'] += f"🌅 {day['astronomy'][0]['sunrise']} 🌇 {day['astronomy'][0]['sunset']}\n"
-    for hour in day['hourly']:
-        if i == 0:
-            if int(format_time(hour['time'])) < datetime.now().hour-2:
-                continue
-        data['tooltip'] += f"{format_time(hour['time'])} {WEATHER_CODES[hour['weatherCode']]} {format_temp(hour['FeelsLikeC'])} {hour['weatherDesc'][0]['value']}, {format_chances(hour)}\n"
+    data['tooltip'] += f"{forecast_date.strftime('%Y-%m-%d')}</b>\n"
+    
+    data['tooltip'] += f"⬆️ {day['temp']['max']:.1f}° ⬇️ {day['temp']['min']:.1f}° "
+    data['tooltip'] += f"🌅 {datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')} "
+    data['tooltip'] += f"🌇 {datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
+
+# Hourly forecast for next 24 hours
+current_hour = datetime.now().hour
+for hour in weather['hourly'][:24]:
+    hour_time = datetime.fromtimestamp(hour['dt'])
+    if hour_time.hour < current_hour - 2:
+        continue
+        
+    weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
+    data['tooltip'] += (
+        f"{hour_time.strftime('%H:%M')} {weather_emoji} "
+        f"{format_temp(hour['temp'])} "
+        f"{hour['weather'][0]['description'].capitalize()}, "
+        f"{format_chances(hour)}\n"
+    )
 
 
 print(json.dumps(data))
