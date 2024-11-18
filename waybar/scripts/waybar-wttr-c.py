@@ -111,7 +111,6 @@ try:
     geo_response = requests.get(geo_url)
     geo_response.raise_for_status()  # Raise exception for bad status codes
     geo_data = geo_response.json()
-    print(geo_data)
     
     if not geo_data:
         print(json.dumps({"text": "❌", "tooltip": "City not found"}))
@@ -125,7 +124,6 @@ try:
     weather_response = requests.get(weather_url)
     weather_response.raise_for_status()
     weather = weather_response.json()
-    print(weather)
 
 except requests.RequestException as e:
     print(json.dumps({"text": "❌", "tooltip": f"Weather API error: {str(e)}"}))
