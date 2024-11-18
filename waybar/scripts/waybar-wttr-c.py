@@ -59,7 +59,9 @@ except FileNotFoundError:
 try:
     # Get coordinates for the city
     geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={api_key}"
-    geo_data = requests.get(geo_url).json()
+    geo_response = requests.get(geo_url)
+    geo_response.raise_for_status()  # Raise exception for bad status codes
+    geo_data = geo_response.json()
     
     if not geo_data:
         print(json.dumps({"text": "❌", "tooltip": "City not found"}))
@@ -69,11 +71,16 @@ try:
     lon = geo_data[0]['lon']
     
     # Get current weather and forecast
-    weather_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
-    weather = requests.get(weather_url).json()
-    print(weather)
+    weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
+    weather_response = requests.get(weather_url)
+    weather_response.raise_for_status()
+    weather = weather_response.json()
+
 except requests.RequestException as e:
     print(json.dumps({"text": "❌", "tooltip": f"Weather API error: {str(e)}"}))
+    exit(0)
+except (KeyError, IndexError) as e:
+    print(json.dumps({"text": "❌", "tooltip": f"Data parsing error: {str(e)}"}))
     exit(0)
 
 
