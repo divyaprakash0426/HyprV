@@ -213,11 +213,6 @@ extrachar = ''
 if tempint > 0 and tempint < 10:
     extrachar = '+'  # Add plus sign for positive single digits
 
-# Debug prints
-print("Weather ID:", weather['current']['weather'][0]['id'])
-print("Emoji:", get_weather_emoji(weather['current']['weather'][0]['id']))
-print("Temperature:", feels_like)
-
 data['text'] = get_weather_emoji(weather['current']['weather'][0]['id']) + \
     " " + extrachar + f"{feels_like:.0f}°"
 
