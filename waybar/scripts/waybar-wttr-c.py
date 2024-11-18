@@ -71,6 +71,7 @@ try:
     # Get current weather and forecast
     weather_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
     weather = requests.get(weather_url).json()
+    print(weather)
 except requests.RequestException as e:
     print(json.dumps({"text": "❌", "tooltip": f"Weather API error: {str(e)}"}))
     exit(0)
