@@ -62,6 +62,7 @@ try:
     geo_response = requests.get(geo_url)
     geo_response.raise_for_status()  # Raise exception for bad status codes
     geo_data = geo_response.json()
+    print(geo_data)
     
     if not geo_data:
         print(json.dumps({"text": "❌", "tooltip": "City not found"}))
@@ -71,7 +72,7 @@ try:
     lon = geo_data[0]['lon']
     
     # Get current weather and forecast
-    weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
+    weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
     weather_response = requests.get(weather_url)
     weather_response.raise_for_status()
     weather = weather_response.json()
@@ -161,16 +162,13 @@ feels_like = current['feels_like']
 weather_id = current['weather'][0]['id']
 
 # Handle special formatting for positive single-digit temperatures
-tempint = int(weather['current_condition'][0]['FeelsLikeC'])
+tempint = int(weather['current'][0]['feels_like'])
 extrachar = ''
 if tempint > 0 and tempint < 10:
     extrachar = '+'  # Add plus sign for positive single digits
 
-# Prepare the main display text for waybar
-
-
-data['text'] = ' '+WEATHER_CODES[weather['current_condition'][0]['weatherCode']] + \
-    " "+extrachar+weather['current_condition'][0]['FeelsLikeC']+"°"
+data['text'] = ' '+WEATHER_CODES[weather['current'][0]['weatherCode']] + \
+    " "+extrachar+weather['current'][0]['feels_like']+"°"
 
 # Build detailed tooltip with current conditions and forecast
 aqi = get_aqi(lat, lon)
