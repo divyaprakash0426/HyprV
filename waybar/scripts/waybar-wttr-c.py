@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Waybar weather module script that fetches weather data from wttr.in
+Waybar weather module script that fetches weather data from OpenWeatherMap
 Displays current weather with emoji and temperature in the bar
 Shows detailed forecast in the tooltip
 """
@@ -11,56 +11,25 @@ import os
 from datetime import datetime, timedelta
 import ephem  # for moon phases
 
-# Dictionary mapping wttr.in weather codes to emoji representations
+# Dictionary mapping OpenWeatherMap codes to emoji representations
 WEATHER_CODES = {
-    '113': '☀️ ',
-    '116': '⛅',
-    '119': '☁️ ',
-    '122': '☁️ ',
-    '143': '☁️ ',
-    '176': '🌧️',
-    '179': '🌧️',
-    '182': '🌧️',
-    '185': '🌧️',
-    '200': '⛈️ ',
-    '227': '🌨️',
-    '230': '🌨️',
-    '248': '☁️ ',
-    '260': '☁️ ',
-    '263': '🌧️',
-    '266': '🌧️',
-    '281': '🌧️',
-    '284': '🌧️',
-    '293': '🌧️',
-    '296': '🌧️',
-    '299': '🌧️',
-    '302': '🌧️',
-    '305': '🌧️',
-    '308': '🌧️',
-    '311': '🌧️',
-    '314': '🌧️',
-    '317': '🌧️',
-    '320': '🌨️',
-    '323': '🌨️',
-    '326': '🌨️',
-    '329': '❄️ ',
-    '332': '❄️ ',
-    '335': '❄️ ',
-    '338': '❄️ ',
-    '350': '🌧️',
-    '353': '🌧️',
-    '356': '🌧️',
-    '359': '🌧️',
-    '362': '🌧️',
-    '365': '🌧️',
-    '368': '🌧️',
-    '371': '❄️',
-    '374': '🌨️',
-    '377': '🌨️',
-    '386': '🌨️',
-    '389': '🌨️',
-    '392': '🌧️',
-    '395': '❄️ '
+    # Thunderstorm
+    "2": "⛈️",
+    # Drizzle
+    "3": "🌧️",
+    # Rain
+    "5": "🌧️",
+    # Snow
+    "6": "❄️",
+    # Atmosphere (fog, mist, etc)
+    "7": "🌫️",
+    # Clear
+    "800": "☀️",
+    # Clouds
+    "801": "⛅",
+    "802": "☁️",
+    "803": "☁️",
+    "804": "☁️"
 }
 
 # Initialize data dictionary for waybar output
