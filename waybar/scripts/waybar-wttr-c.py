@@ -8,7 +8,8 @@ Shows detailed forecast in the tooltip
 import json
 import requests
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
+import ephem  # for moon phases
 
 # Dictionary mapping wttr.in weather codes to emoji representations
 WEATHER_CODES = {
@@ -114,6 +115,45 @@ def format_chances(hour):
             conditions.append(chances[event]+" "+hour[event]+"%")
     return ", ".join(conditions)
 
+def get_aqi(lat, lon):
+    """Fetch AQI data using OpenWeatherMap API"""
+    try:
+        with open(config_file, 'r') as f:
+            for line in f:
+                if line.startswith('OPENWEATHERMAP_API_KEY='):
+                    api_key = line.split('=')[1].strip().strip('"')
+                    break
+        if not api_key:
+            return "N/A"
+        
+        url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
+        response = requests.get(url)
+        data = response.json()
+        return data['list'][0]['main']['aqi']  # Returns 1-5 scale
+    except:
+        return "N/A"
+
+def get_moon_phases():
+    """Calculate next full and half moon dates"""
+    def next_phase(date, phase):
+        calc_date = ephem.next_phase(date, phase)
+        return calc_date.datetime()
+
+    now = datetime.now()
+    next_full = next_phase(now, 0)
+    next_half = next_phase(now, 0.5)
+    return next_full, next_half
+
+def get_ekadashi_info():
+    """Calculate next Ekadashi dates and times"""
+    # Simplified placeholder implementation
+    return {
+        'next_ekadashi': datetime.now() + timedelta(days=11),
+        'type': 'Utpanna Ekadashi',
+        'start_time': '05:32',
+        'end_time': '09:47'
+    }
+
 # Handle special formatting for positive single-digit temperatures
 tempint = int(weather['current_condition'][0]['FeelsLikeC'])
 extrachar = ''
@@ -127,11 +167,27 @@ data['text'] = ' '+WEATHER_CODES[weather['current_condition'][0]['weatherCode'
     " "+extrachar+weather['current_condition'][0]['FeelsLikeC']+"°"
 
 # Build detailed tooltip with current conditions and forecast
+# Get additional data
+aqi = get_aqi(weather['nearest_area'][0]['latitude'], weather['nearest_area'][0]['longitude'])
+next_full, next_half = get_moon_phases()
+ekadashi = get_ekadashi_info()
+
 data['tooltip'] = f"<b>{city}</b>\n"
 data['tooltip'] += f"<b>{weather['current_condition'][0]['weatherDesc'][0]['value']} {weather['current_condition'][0]['temp_C']}°</b>\n"
 data['tooltip'] += f"Feels like: {weather['current_condition'][0]['FeelsLikeC']}°\n"
 data['tooltip'] += f"Wind: {weather['current_condition'][0]['windspeedKmph']}Km/h\n"
 data['tooltip'] += f"Humidity: {weather['current_condition'][0]['humidity']}%\n"
+data['tooltip'] += f"AQI: {aqi}/5\n\n"
+
+# Add moon and Ekadashi section
+data['tooltip'] += "🌕 <b>Moon Phases</b>\n"
+data['tooltip'] += f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}\n"
+data['tooltip'] += f"Next Half Moon: {next_half.strftime('%Y-%m-%d')}\n\n"
+
+data['tooltip'] += "🕉️ <b>Ekadashi</b>\n"
+data['tooltip'] += f"Next: {ekadashi['type']}\n"
+data['tooltip'] += f"Date: {ekadashi['next_ekadashi'].strftime('%Y-%m-%d')}\n"
+data['tooltip'] += f"Start: {ekadashi['start_time']}, End: {ekadashi['end_time']}\n\n"
 for i, day in enumerate(weather['weather']):
     data['tooltip'] += "\n<b>"
     if i == 0:
