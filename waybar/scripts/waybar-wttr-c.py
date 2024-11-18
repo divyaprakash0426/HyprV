@@ -134,15 +134,15 @@ def get_aqi(lat, lon):
         return "N/A"
 
 def get_moon_phases():
-    """Calculate next full and half moon dates"""
+    """Calculate next full and new moon dates"""
     def next_phase(date, phase):
         calc_date = ephem.next_phase(date, phase)
         return calc_date.datetime()
 
     now = datetime.now()
-    next_full = next_phase(now, 0)
-    next_half = next_phase(now, 0.5)
-    return next_full, next_half
+    next_full = next_phase(now, 0)  # 0 represents full moon
+    next_new = next_phase(now, 0.25)  # 0.25 represents new moon
+    return next_full, next_new
 
 def get_ekadashi_info():
     """Calculate next Ekadashi dates and times"""
@@ -182,7 +182,7 @@ data['tooltip'] += f"AQI: {aqi}/5\n\n"
 # Add moon and Ekadashi section
 data['tooltip'] += "🌕 <b>Moon Phases</b>\n"
 data['tooltip'] += f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}\n"
-data['tooltip'] += f"Next Half Moon: {next_half.strftime('%Y-%m-%d')}\n\n"
+data['tooltip'] += f"Next New Moon: {next_half.strftime('%Y-%m-%d')}\n\n"
 
 data['tooltip'] += "🕉️ <b>Ekadashi</b>\n"
 data['tooltip'] += f"Next: {ekadashi['type']}\n"
