@@ -35,24 +35,45 @@ WEATHER_CODES = {
 # Initialize data dictionary for waybar output
 data = {}
 
-# Fetch weather data from wttr.in for Gurugram in JSON format
-# Read city from config file
+# Read config file for API key and city
 config_file = os.path.expanduser('~/.config/HyprV/hyprv.conf')
 city = None
+api_key = None
+
 try:
     with open(config_file, 'r') as f:
         for line in f:
             if line.startswith('SET_CITY='):
                 city = line.split('=')[1].strip().strip('"')
-                break
-    if not city:
-        print(json.dumps({"text": "❌", "tooltip": "City not set in hyprv.conf"}))
+            elif line.startswith('OPENWEATHERMAP_API_KEY='):
+                api_key = line.split('=')[1].strip().strip('"')
+    
+    if not city or not api_key:
+        print(json.dumps({"text": "❌", "tooltip": "City or API key not set in hyprv.conf"}))
         exit(0)
 except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
     exit(0)
 
-weather = requests.get(f"https://wttr.in/{city}?format=j1").json()
+# Fetch current weather and forecast from OpenWeatherMap
+try:
+    # Get coordinates for the city
+    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={api_key}"
+    geo_data = requests.get(geo_url).json()
+    
+    if not geo_data:
+        print(json.dumps({"text": "❌", "tooltip": "City not found"}))
+        exit(0)
+        
+    lat = geo_data[0]['lat']
+    lon = geo_data[0]['lon']
+    
+    # Get current weather and forecast
+    weather_url = f"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
+    weather = requests.get(weather_url).json()
+except requests.RequestException as e:
+    print(json.dumps({"text": "❌", "tooltip": f"Weather API error: {str(e)}"}))
+    exit(0)
 
 
 def format_time(time):
