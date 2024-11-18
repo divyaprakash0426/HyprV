@@ -146,6 +146,12 @@ def get_ekadashi_info():
         'end_time': '09:47'
     }
 
+# Prepare the main display text for waybar
+current = weather['current']
+temp = current['temp']
+feels_like = current['feels_like']
+weather_id = current['weather'][0]['id']
+
 # Handle special formatting for positive single-digit temperatures
 tempint = int(weather['current_condition'][0]['FeelsLikeC'])
 extrachar = ''
