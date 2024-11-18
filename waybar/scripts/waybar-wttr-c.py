@@ -164,7 +164,7 @@ if tempint > 0 and tempint < 10:
     extrachar = '+'  # Add plus sign for positive single digits
 
 data['text'] = ' '+get_weather_emoji(weather['current']['weather'][0]['id']) + \
-    " "+extrachar+f"{round(weather['current']['feels_like'])}°"
+    " "+str(round(weather['current']['feels_like']))+"°"
 
 # Build detailed tooltip with current conditions and forecast
 aqi = get_aqi(lat, lon)
