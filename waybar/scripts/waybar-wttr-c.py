@@ -136,14 +136,10 @@ def get_aqi(lat, lon):
 
 def get_moon_phases():
     """Calculate next full and new moon dates"""
-    def next_phase(date, phase):
-        calc_date = ephem.next_phase(date, phase)
-        return calc_date.datetime()
-
-    now = datetime.now()
-    next_full = next_phase(now, 0)  # 0 represents full moon
-    next_new = next_phase(now, 0.25)  # 0.25 represents new moon
-    return next_full, next_new
+    now = ephem.now()
+    next_full = ephem.next_full_moon(now)
+    next_new = ephem.next_new_moon(now)
+    return next_full.datetime(), next_new.datetime()
 
 def get_ekadashi_info():
     """Calculate next Ekadashi dates and times"""
