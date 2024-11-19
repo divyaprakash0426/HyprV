@@ -8,7 +8,9 @@ Shows detailed forecast in the tooltip
 import json
 import requests
 import os
+import pickle
 from datetime import datetime, timedelta
+from pathlib import Path
 
 # Dictionary mapping OpenWeatherMap codes to emoji representations
 WEATHER_CODES = {
@@ -80,8 +82,36 @@ WEATHER_CODES = {
     "804": "☁️"    # overcast clouds: 85-100%
 }
 
+# Cache settings
+CACHE_DIR = Path(os.path.expanduser("~/.cache/waybar-weather"))
+CACHE_FILE = CACHE_DIR / "weather_cache.pkl"
+CACHE_DURATION = 3600  # 1 hour in seconds
+
+# Create cache directory if it doesn't exist
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
 # Initialize data dictionary for waybar output
 data = {}
+
+def load_cached_data():
+    """Load cached weather data if it exists and is fresh"""
+    try:
+        if CACHE_FILE.exists():
+            cache_age = datetime.now().timestamp() - CACHE_FILE.stat().st_mtime
+            if cache_age < CACHE_DURATION:
+                with open(CACHE_FILE, 'rb') as f:
+                    return pickle.load(f)
+    except Exception:
+        pass
+    return None
+
+def save_cached_data(weather_data, location_data):
+    """Save weather and location data to cache"""
+    try:
+        with open(CACHE_FILE, 'wb') as f:
+            pickle.dump((weather_data, location_data), f)
+    except Exception:
+        pass
 
 # Read config file for API key
 config_file = os.path.expanduser('~/.config/HyprV/hyprv.conf')
@@ -100,21 +130,29 @@ except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
     exit(0)
 
-# Fetch current weather and forecast from OpenWeatherMap
-try:
-    # Get location from IP
-    ip_response = requests.get("https://ipapi.co/json/")
-    ip_response.raise_for_status()
-    location = ip_response.json()
-    
-    lat = location['latitude']
-    lon = location['longitude']
-    
-    # Get current weather and forecast
-    weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
-    weather_response = requests.get(weather_url)
-    weather_response.raise_for_status()
-    weather = weather_response.json()
+# Check cache first
+cached_data = load_cached_data()
+if cached_data:
+    weather, location = cached_data
+else:
+    # Fetch current weather and forecast from OpenWeatherMap
+    try:
+        # Get location from IP
+        ip_response = requests.get("https://ipapi.co/json/")
+        ip_response.raise_for_status()
+        location = ip_response.json()
+        
+        lat = location['latitude']
+        lon = location['longitude']
+        
+        # Get current weather and forecast
+        weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
+        weather_response = requests.get(weather_url)
+        weather_response.raise_for_status()
+        weather = weather_response.json()
+        
+        # Save to cache
+        save_cached_data(weather, location)
 
 except requests.RequestException as e:
     print(json.dumps({"text": "❌", "tooltip": f"Weather API error: {str(e)}"}))
