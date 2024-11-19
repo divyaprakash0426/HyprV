@@ -329,29 +329,46 @@ def get_weather_emoji(weather_id):
     return WEATHER_CODES.get(code_str[0], "❓")
 
 def get_aqi(lat, lon):
-    """Fetch AQI data using OpenWeatherMap API"""
+    """Fetch AQI data using Google Air Quality API"""
     try:
         with open(config_file, 'r') as f:
             for line in f:
-                if line.startswith('OPENWEATHERMAP_API_KEY='):
+                if line.startswith('GOOGLE_MAPS_API_KEY='):
                     api_key = line.split('=')[1].strip().strip('"')
                     break
         if not api_key:
             return "N/A"
         
-        url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={lat}&lon={lon}&appid={api_key}"
-        response = requests.get(url)
-        data = response.json()
-        aqi = data['list'][0]['main']['aqi']
-        aqi_labels = {
-            1: "Good",
-            2: "Fair",
-            3: "Moderate",
-            4: "Poor",
-            5: "Very Poor"
+        url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={api_key}"
+        payload = {
+            "location": {
+                "latitude": lat,
+                "longitude": lon
+            }
         }
-        return f"{aqi}/5 ({aqi_labels[aqi]})"
-    except:
+        
+        response = requests.post(url, json=payload)
+        data = response.json()
+        
+        aqi = data['indexes']['us_aqi']['aqi']
+        dominant_pollutant = data['indexes']['us_aqi']['dominantPollutant']
+        
+        # AQI categories based on US EPA standard (0-500 scale)
+        if aqi <= 50:
+            category = "Good"
+        elif aqi <= 100:
+            category = "Moderate"
+        elif aqi <= 150:
+            category = "Unhealthy for Sensitive Groups"
+        elif aqi <= 200:
+            category = "Unhealthy"
+        elif aqi <= 300:
+            category = "Very Unhealthy"
+        else:
+            category = "Hazardous"
+            
+        return f"{aqi}/500 ({category})\nDominant: {dominant_pollutant}"
+    except Exception as e:
         return "N/A"
 
 
