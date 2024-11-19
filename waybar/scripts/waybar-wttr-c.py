@@ -342,6 +342,7 @@ def get_aqi(lat, lon):
         
         url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={api_key}"
         payload = {
+            "universalAqi": True,
             "location": {
                 "latitude": lat,
                 "longitude": lon
