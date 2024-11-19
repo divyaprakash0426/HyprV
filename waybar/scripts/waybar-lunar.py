@@ -79,7 +79,7 @@ class DrikPanchangInfo:
             }
 
 def get_current_moon_phase():
-    """Get current moon phase emoji for specific location"""
+    """Get current moon phase emoji and name for specific location"""
     location = get_location()
     observer = ephem.Observer()
     observer.lat = str(location['latitude'])
@@ -95,22 +95,22 @@ def get_current_moon_phase():
     
     lunation = (observer.date - pnm) / (nnm - pnm)
     
-    # Convert lunation to moon phase emoji
+    # Convert lunation to moon phase emoji and name
     if lunation < 0.125:
-        return "🌑"  # New Moon
+        return "🌑", "New Moon"
     elif lunation < 0.375:
-        return "🌒"  # Waxing Crescent
+        return "🌒", "Waxing Crescent"
     elif lunation < 0.625:
-        return "🌓"  # First Quarter
+        return "🌓", "First Quarter"
     elif lunation < 0.875:
-        return "🌔"  # Waxing Gibbous
+        return "🌔", "Waxing Gibbous"
     else:
-        return "🌕"  # Full Moon
+        return "🌕", "Full Moon"
 
 def main():
     # Get moon phase info
     next_full, next_new = get_moon_phases()
-    current_phase = get_current_moon_phase()
+    current_phase_emoji, current_phase_name = get_current_moon_phase()
     
     # Get DrikPanchang info
     dp_info = DrikPanchangInfo()
@@ -119,7 +119,7 @@ def main():
     # Prepare tooltip text
     tooltip = [
         f"🌕 <b>Moon Phases</b>",
-        f"Current Phase: {current_phase}",
+        f"Current Phase: {current_phase_emoji} {current_phase_name}",
         f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}",
         f"Next New Moon: {next_new.strftime('%Y-%m-%d')}",
         "",
@@ -134,7 +134,7 @@ def main():
         tooltip.extend(["", f"🎯 <b>Today's Event</b>", today_info['event']])
     
     data = {
-        "text": current_phase,
+        "text": f"{current_phase_emoji}",
         "tooltip": "\n".join(tooltip)
     }
     
