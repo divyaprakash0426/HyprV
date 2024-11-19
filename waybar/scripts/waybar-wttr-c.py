@@ -252,21 +252,34 @@ data['tooltip'] += f"Humidity: {current['humidity']}%\n"
 data['tooltip'] += f"AQI: {aqi}\n"
 
 
-# Daily forecast with hourly details
-for i, day in enumerate(weather['daily'][:2]):  # Only today and tomorrow
+# Detailed forecast with hourly details for today and tomorrow
+for i, day in enumerate(weather['daily'][:5]):  # Process 5 days
     data['tooltip'] += "\n<b>"
     forecast_date = datetime.fromtimestamp(day['dt'])
+    
+    # Add day label
     if i == 0:
         data['tooltip'] += "Today, "
     elif i == 1:
         data['tooltip'] += "Tomorrow, "
+    else:
+        data['tooltip'] += forecast_date.strftime('%A, ')  # Full day name
     data['tooltip'] += f"{forecast_date.strftime('%Y-%m-%d')}</b>\n"
     
+    # Basic info for all days
+    weather_emoji = get_weather_emoji(day['weather'][0]['id'])
+    data['tooltip'] += f"{weather_emoji} {day['weather'][0]['description'].capitalize()}\n"
     data['tooltip'] += f"⬆️ {day['temp']['max']:.1f}° ⬇️ {day['temp']['min']:.1f}° "
-    data['tooltip'] += f"🌅 {datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')} "
-    data['tooltip'] += f"🌇 {datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
+    
+    # Add sunrise/sunset only for first two days
+    if i < 2:
+        data['tooltip'] += f"🌅 {datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')} "
+        data['tooltip'] += f"🌇 {datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
+    else:
+        data['tooltip'] += f"💧 {int(day.get('pop', 0) * 100)}%\n"  # Precipitation probability for later days
+        continue  # Skip hourly details for days after tomorrow
 
-    # Get hourly data for this day
+    # Hourly details only for today and tomorrow
     day_start = forecast_date.replace(hour=0, minute=0, second=0).timestamp()
     day_end = forecast_date.replace(hour=23, minute=59, second=59).timestamp()
     
