@@ -182,22 +182,6 @@ def get_aqi(lat, lon):
     except:
         return "N/A"
 
-def get_moon_phases():
-    """Calculate next full and new moon dates"""
-    now = ephem.now()
-    next_full = ephem.next_full_moon(now)
-    next_new = ephem.next_new_moon(now)
-    return next_full.datetime(), next_new.datetime()
-
-def get_ekadashi_info():
-    """Calculate next Ekadashi dates and times"""
-    # Simplified placeholder implementation
-    return {
-        'next_ekadashi': datetime.now() + timedelta(days=11),
-        'type': 'Utpanna Ekadashi',
-        'start_time': '05:32',
-        'end_time': '09:47'
-    }
 
 # Prepare the main display text for waybar
 current = weather['current']
@@ -226,15 +210,6 @@ data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
 data['tooltip'] += f"Humidity: {current['humidity']}%\n"
 data['tooltip'] += f"AQI: {aqi}\n\n"
 
-# Add moon and Ekadashi section
-data['tooltip'] += "🌕 <b>Moon Phases</b>\n"
-data['tooltip'] += f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}\n"
-data['tooltip'] += f"Next New Moon: {next_new.strftime('%Y-%m-%d')}\n\n"
-
-data['tooltip'] += "🕉️ <b>Ekadashi</b>\n"
-data['tooltip'] += f"Next: {ekadashi['type']}\n"
-data['tooltip'] += f"Date: {ekadashi['next_ekadashi'].strftime('%Y-%m-%d')}\n"
-data['tooltip'] += f"Start: {ekadashi['start_time']}, End: {ekadashi['end_time']}\n\n"
 
 # Daily forecast with hourly details
 for i, day in enumerate(weather['daily'][:2]):  # Only today and tomorrow
