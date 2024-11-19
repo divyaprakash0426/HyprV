@@ -5,12 +5,26 @@ Waybar module for displaying moon phases and Hindu calendar information using Dr
 
 import json
 import os
+import pickle
 from datetime import datetime
 import ephem
 from hindu_calendar import HinduCalendar
+from pathlib import Path
 
-CONFIG_DIR = os.path.expanduser("~/.config/waybar/scripts")
-CONFIG_FILE = os.path.join(CONFIG_DIR, "drikpanchang_config.json")
+# Reuse weather cache for location
+CACHE_DIR = Path(os.path.expanduser("~/.cache/waybar-weather"))
+CACHE_FILE = CACHE_DIR / "weather_cache.pkl"
+
+def get_location():
+    """Load location data from weather cache"""
+    try:
+        if CACHE_FILE.exists():
+            with open(CACHE_FILE, 'rb') as f:
+                _, location = pickle.load(f)
+                return location
+    except Exception:
+        # Default to Mumbai if cache read fails
+        return {"city": "Mumbai", "latitude": 19.0760, "longitude": 72.8777}
 
 def get_moon_phases():
     """Calculate next full and new moon dates"""
@@ -19,26 +33,16 @@ def get_moon_phases():
     next_new = ephem.next_new_moon(now)
     return next_full.datetime(), next_new.datetime()
 
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as f:
-            return json.load(f)
-    return {
-        "method": "marathi",
-        "city": "Mumbai",
-        "city_id": "1275339",
-        "regional_language": False
-    }
-
 class DrikPanchangInfo:
     def __init__(self):
-        config = load_config()
-        self.calendar = HinduCalendar(
-            method=config['method'],
-            regional_language=config['regional_language']
-        )
+        location = get_location()
+        self.calendar = HinduCalendar(method='marathi')
         try:
-            self.calendar.set_city(config['city_id'], config['city'])
+            self.calendar.set_location(
+                location['latitude'],
+                location['longitude'],
+                location['city']
+            )
         except Exception as e:
             print(f"Error setting up city: {e}")
 
