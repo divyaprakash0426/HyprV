@@ -168,12 +168,14 @@ def get_location_from_wifi():
     
     try:
         payload = {"wifiAccessPoints": wifi_points}
+        print("printing payload to send", payload)
         response = requests.post(
             "https://location.services.mozilla.com/v1/geolocate?key=test",
             json=payload,
             timeout=5
         )
         response.raise_for_status()
+        print("Mozilla response", response)
         data = response.json()
         
         return {
