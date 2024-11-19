@@ -59,6 +59,7 @@ tooltip label{
 #custom-power_btn,
 #custom-power_profile,
 #custom-weather,
+#custom-lunar,
 #custom-myhyprv,
 #window,
 #cpu,
@@ -135,8 +136,7 @@ tooltip label{
     border-left: 0px;
 }
 
-#custom-notification,
-#custom-lunar {
+#custom-notification {
     color: #89b4fa;
     background: #1e1e2e;
     opacity: 0.8;
