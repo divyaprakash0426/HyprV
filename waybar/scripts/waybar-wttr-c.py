@@ -130,11 +130,17 @@ except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
     exit(0)
 
+# Initialize location coordinates
+lat = None
+lon = None
+
 try:
     # Check cache first
     cached_data = load_cached_data()
     if cached_data:
         weather, location = cached_data
+        lat = location['latitude']
+        lon = location['longitude']
     else:
         # Fetch current weather and forecast from OpenWeatherMap
         # Get location from IP
