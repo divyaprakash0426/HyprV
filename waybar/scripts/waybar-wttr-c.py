@@ -130,13 +130,13 @@ except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
     exit(0)
 
-# Check cache first
-cached_data = load_cached_data()
-if cached_data:
-    weather, location = cached_data
-else:
-    # Fetch current weather and forecast from OpenWeatherMap
-    try:
+try:
+    # Check cache first
+    cached_data = load_cached_data()
+    if cached_data:
+        weather, location = cached_data
+    else:
+        # Fetch current weather and forecast from OpenWeatherMap
         # Get location from IP
         ip_response = requests.get("https://ipapi.co/json/")
         ip_response.raise_for_status()
