@@ -8,6 +8,7 @@ Shows detailed forecast in the tooltip
 import json
 import requests
 import os
+import sys
 import pickle
 import subprocess
 import re
@@ -344,31 +345,46 @@ def get_aqi(lat, lon):
             "location": {
                 "latitude": lat,
                 "longitude": lon
-            }
+            },
+            "extraComputations": [
+                "HEALTH_RECOMMENDATIONS",
+                "DOMINANT_POLLUTANT_CONCENTRATION",
+                "POLLUTANT_CONCENTRATION"
+            ],
+            "languageCode": "en"
         }
         
-        response = requests.post(url, json=payload)
+        response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
         data = response.json()
         
-        aqi = data['indexes']['us_aqi']['aqi']
-        dominant_pollutant = data['indexes']['us_aqi']['dominantPollutant']
-        
-        # AQI categories based on US EPA standard (0-500 scale)
-        if aqi <= 50:
-            category = "Good"
-        elif aqi <= 100:
-            category = "Moderate"
-        elif aqi <= 150:
-            category = "Unhealthy for Sensitive Groups"
-        elif aqi <= 200:
-            category = "Unhealthy"
-        elif aqi <= 300:
-            category = "Very Unhealthy"
+        # Get Universal AQI from indexes
+        for index in data['indexes']:
+            if index['code'] == 'uaqi':
+                aqi = index['aqi']
+                category = index['category']
+                dominant_pollutant = index['dominantPollutant'].upper()
+                break
         else:
-            category = "Hazardous"
+            return "N/A"  # No UAQI found
             
-        return f"{aqi}/500 ({category})\nDominant: {dominant_pollutant}"
+        # Get pollutant concentrations
+        pollutant_info = []
+        for pollutant in data.get('pollutants', []):
+            conc = pollutant['concentration']
+            pollutant_info.append(
+                f"{pollutant['displayName']}: {conc['value']:.1f} {conc['units']}"
+            )
+            
+        result = [f"{aqi}/500 ({category})"]
+        if pollutant_info:
+            result.append(f"Dominant: {dominant_pollutant}")
+            result.append("Pollutants:")
+            result.extend(pollutant_info)
+            
+        return "\n".join(result)
     except Exception as e:
+        print(f"AQI Error: {str(e)}", file=sys.stderr)  # Log the error
         return "N/A"
 
 
