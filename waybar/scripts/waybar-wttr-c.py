@@ -219,7 +219,7 @@ aqi = get_aqi(lat, lon)
 next_full, next_new = get_moon_phases()
 ekadashi = get_ekadashi_info()
 
-data['tooltip'] = f"<b>{city}</b>\n"
+data['tooltip'] = f"<b>{location['city']}, {location['country_name']}</b>\n"
 data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {temp:.1f}°</b>\n"
 data['tooltip'] += f"Feels like: {feels_like:.1f}°\n"
 data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
