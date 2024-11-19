@@ -145,11 +145,17 @@ def get_wifi_networks():
         wifi_points = []
         for line in output.strip().split('\n'):
             if ':' in line:
-                bssid, signal = line.split(':')
-                wifi_points.append({
-                    "macAddress": bssid.strip(),
-                    "signalStrength": int(signal.strip())
-                })
+                bssid, signal = line.rsplit(':', 1)  # Split from right side once
+                # Remove backslashes from MAC address
+                clean_bssid = bssid.replace('\\:', ':')
+                try:
+                    signal_strength = int(signal.strip())
+                    wifi_points.append({
+                        "macAddress": clean_bssid,
+                        "signalStrength": signal_strength
+                    })
+                except ValueError:
+                    continue
         return wifi_points
     except (subprocess.SubprocessError, ValueError):
         return []
