@@ -97,32 +97,36 @@ def get_current_moon_phase():
     
     lunation = (observer.date - pnm) / (nnm - pnm)
     
-    # Check if we're in waxing (New->Full) or waning (Full->New) phase
-    is_waxing = observer.date < nfm and observer.date > pnm
+    # Calculate days since previous new moon
+    days_since_new = (observer.date - pnm)
+    days_to_full = (nfm - observer.date) 
+    days_from_full = (observer.date - pfm)
     
-    # Convert lunation to moon phase emoji and name
-    if is_waxing:
-        if lunation < 0.125:
-            return "🌑", "New Moon"
-        elif lunation < 0.375:
-            return "🌒", "Waxing Crescent" 
-        elif lunation < 0.625:
+    # Determine if we're waxing (New->Full) or waning (Full->New)
+    is_waxing = days_to_full < days_from_full
+    
+    # Get illuminated percentage
+    phase_percent = moon.phase
+
+    # Convert phase percentage to appropriate emoji and name
+    if phase_percent < 6.25:  # 0-6.25%
+        return "🌑", "New Moon"
+    elif phase_percent > 93.75:  # 93.75-100%
+        return "🌕", "Full Moon"
+    elif is_waxing:
+        if phase_percent < 43.75:  # 6.25-43.75%
+            return "🌒", "Waxing Crescent"
+        elif phase_percent < 56.25:  # 43.75-56.25%
             return "🌓", "First Quarter"
-        elif lunation < 0.875:
+        else:  # 56.25-93.75%
             return "🌔", "Waxing Gibbous"
-        else:
-            return "🌕", "Full Moon"
-    else:
-        if lunation < 0.125:
-            return "🌑", "New Moon"
-        elif lunation < 0.375:
-            return "🌖", "Waning Gibbous"
-        elif lunation < 0.625:
-            return "🌗", "Last Quarter" 
-        elif lunation < 0.875:
+    else:  # Waning
+        if phase_percent < 43.75:  # 6.25-43.75%
             return "🌘", "Waning Crescent"
-        else:
-            return "🌕", "Full Moon"
+        elif phase_percent < 56.25:  # 43.75-56.25%
+            return "🌗", "Last Quarter"
+        else:  # 56.25-93.75%
+            return "🌖", "Waning Gibbous"
 
 def main():
     # Get moon phase info
