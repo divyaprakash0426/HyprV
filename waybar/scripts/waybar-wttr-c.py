@@ -9,7 +9,6 @@ import json
 import requests
 import os
 from datetime import datetime, timedelta
-import ephem  # for moon phases
 
 # Dictionary mapping OpenWeatherMap codes to emoji representations
 WEATHER_CODES = {
@@ -200,15 +199,13 @@ data['text'] = get_weather_emoji(weather['current']['weather'][0]['id']) + \
 
 # Build detailed tooltip with current conditions and forecast
 aqi = get_aqi(lat, lon)
-next_full, next_new = get_moon_phases()
-ekadashi = get_ekadashi_info()
 
 data['tooltip'] = f"<b>{location['city']}, {location['country_name']}</b>\n"
 data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {temp:.1f}°</b>\n"
 data['tooltip'] += f"Feels like: {feels_like:.1f}°\n"
 data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
 data['tooltip'] += f"Humidity: {current['humidity']}%\n"
-data['tooltip'] += f"AQI: {aqi}\n\n"
+data['tooltip'] += f"AQI: {aqi}\n"
 
 
 # Daily forecast with hourly details
