@@ -47,27 +47,36 @@ class DrikPanchangInfo:
         location = get_location()
         self.calendar = HinduCalendar(method='marathi')
         try:
-            self.calendar.set_location(
-                location['latitude'],
-                location['longitude'],
-                location['city']
+            # Use the proper set_city method with geonames_id
+            self.calendar.set_city(
+                location.get('geonames_id', '1275339'),  # Default to Mumbai's geonames_id
+                location.get('city', 'Mumbai')
             )
         except Exception as e:
             print(f"Error setting up city: {e}")
+            # Fallback to Mumbai if there's an error
+            self.calendar.set_city('1275339', 'Mumbai')
 
     def get_today_info(self):
         try:
             date_obj = self.calendar.today()
+            panchang = date_obj.get('panchang', {})
             return {
-                'tithi': date_obj['panchang'].get('Tithi', ''),
-                'nakshatra': date_obj['panchang'].get('Nakshatra', ''),
-                'yoga': date_obj['panchang'].get('Yoga', ''),
+                'tithi': panchang.get('Tithi', '').split(' upto ')[0],  # Remove "upto" time
+                'nakshatra': panchang.get('Nakshatra', '').split(' upto ')[0],
+                'yoga': panchang.get('Yoga', '').split(' upto ')[0],
                 'event': date_obj.get('event', ''),
                 'regional_date': date_obj.get('regional_datestring', '')
             }
         except Exception as e:
             print(f"Error getting panchang info: {e}")
-            return {}
+            return {
+                'tithi': '',
+                'nakshatra': '',
+                'yoga': '',
+                'event': '',
+                'regional_date': ''
+            }
 
 def get_current_moon_phase():
     """Get current moon phase emoji for specific location"""
