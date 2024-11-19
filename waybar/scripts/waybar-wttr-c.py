@@ -144,9 +144,16 @@ try:
     else:
         # Fetch current weather and forecast from OpenWeatherMap
         # Get location from IP
-        ip_response = requests.get("https://ipapi.co/json/")
-        ip_response.raise_for_status()
-        location = ip_response.json()
+        try:
+            ip_response = requests.get("https://ipapi.co/json/")
+            ip_response.raise_for_status()
+            location = ip_response.json()
+        except requests.RequestException as e:
+            # If we have cached data and get a rate limit error, use cached location
+            if cached_data and "429" in str(e):
+                weather, location = cached_data
+            else:
+                raise  # Re-raise the exception if we don't have cached data
         
         lat = location['latitude']
         lon = location['longitude']
