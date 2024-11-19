@@ -418,12 +418,13 @@ data['text'] = get_weather_emoji(weather['current']['weather'][0]['id']) + \
 # Build detailed tooltip with current conditions and forecast
 aqi = get_aqi(lat, lon)
 
+# Create a compact tooltip with current conditions
 data['tooltip'] = f"<b>{location['city']}, {location['country_name']}</b>\n"
 data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {temp:.1f}°</b>\n"
-data['tooltip'] += f"Feels like: {feels_like:.1f}°\n"
-data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
-data['tooltip'] += f"Humidity: {current['humidity']}%\n"
-data['tooltip'] += f"AQI: {aqi}\n"
+data['tooltip'] += f"Feels: {feels_like:.1f}° | Wind: {current['wind_speed']:.1f}m/s | Hum: {current['humidity']}%\n"
+data['tooltip'] += "─" * 30 + "\n"  # Separator
+data['tooltip'] += f"{aqi}\n"
+data['tooltip'] += "─" * 30 + "\n"  # Separator
 
 
 # Detailed forecast with hourly details for today and tomorrow
@@ -440,17 +441,17 @@ for i, day in enumerate(weather['daily'][:5]):  # Process 5 days
         data['tooltip'] += forecast_date.strftime('%A, ')  # Full day name
     data['tooltip'] += f"{forecast_date.strftime('%Y-%m-%d')}</b>\n"
     
-    # Basic info for all days
+    # Compact basic info for all days
     weather_emoji = get_weather_emoji(day['weather'][0]['id'])
-    data['tooltip'] += f"{weather_emoji} {day['weather'][0]['description'].capitalize()}\n"
-    data['tooltip'] += f"⬆️ {day['temp']['max']:.1f}° ⬇️ {day['temp']['min']:.1f}° "
+    data['tooltip'] += f"{weather_emoji} {day['weather'][0]['description'].capitalize()}"
+    data['tooltip'] += f" | ⬆️{day['temp']['max']:.1f}° ⬇️{day['temp']['min']:.1f}°"
     
     # Add sunrise/sunset only for first two days
     if i < 2:
-        data['tooltip'] += f"🌅 {datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')} "
-        data['tooltip'] += f"🌇 {datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
+        data['tooltip'] += f" | 🌅{datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')}"
+        data['tooltip'] += f" 🌇{datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
     else:
-        data['tooltip'] += f"💧 {int(day.get('pop', 0) * 100)}%\n"  # Precipitation probability for later days
+        data['tooltip'] += f" | 💧{int(day.get('pop', 0) * 100)}%\n"  # Precipitation probability for later days
         continue  # Skip hourly details for days after tomorrow
 
     # Hourly details only for today and tomorrow
@@ -470,12 +471,15 @@ for i, day in enumerate(weather['daily'][:5]):  # Process 5 days
             # Only show forecasts every 3 hours
             if hour_time.hour % 3 == 0:
                 weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
+                chances = format_chances(hour)
                 data['tooltip'] += (
-                    f"{hour_time.strftime('%H:%M')} {weather_emoji} "
+                    f"{hour_time.strftime('%H:%M')} {weather_emoji}"
                     f"{format_temp(hour['temp'])} "
-                    f"{hour['weather'][0]['description'].capitalize()}, "
-                    f"{format_chances(hour)}\n"
+                    f"{hour['weather'][0]['description'][:15]}"  # Truncate description
                 )
+                if chances:
+                    data['tooltip'] += f" ({chances})"
+                data['tooltip'] += "\n"
 
 
 print(json.dumps(data))
