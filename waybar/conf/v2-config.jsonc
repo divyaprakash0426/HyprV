@@ -30,6 +30,7 @@
         "pulseaudio#microphone",
         "tray",
         "custom/weather",
+        "custom/lunar",
         "custom/myhyprv",
         "custom/light_dark"
     ],
@@ -182,5 +183,13 @@
         "exec": "~/.config/HyprV/waybar/scripts/notification-history count",
         "on-click": "~/.config/HyprV/waybar/scripts/notification-history show",
         "interval": 1
+    },
+
+    "custom/lunar": {
+        "format": "{}",
+        "exec": "~/.config/HyprV/waybar/scripts/waybar-lunar.py",
+        "return-type": "json",
+        "interval": 300,
+        "tooltip": true
     }
 }
