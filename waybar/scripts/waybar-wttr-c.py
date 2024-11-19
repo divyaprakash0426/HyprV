@@ -161,21 +161,36 @@ def get_wifi_networks():
         return []
 
 def get_location_from_wifi():
-    """Get location using Mozilla Location Service"""
+    """Get location using Google Geolocation API"""
     wifi_points = get_wifi_networks()
     if not wifi_points:
         return None
     
+    # Read Google Maps API key
+    api_key = None
     try:
-        payload = {"wifiAccessPoints": wifi_points}
-        print("printing payload to send", payload)
+        with open(config_file, 'r') as f:
+            for line in f:
+                if line.startswith('GOOGLE_MAPS_API_KEY='):
+                    api_key = line.split('=')[1].strip().strip('"')
+                    break
+        if not api_key:
+            return None
+    except FileNotFoundError:
+        return None
+
+    try:
+        payload = {
+            "considerIp": "true",
+            "wifiAccessPoints": wifi_points
+        }
+        
         response = requests.post(
-            "https://location.services.mozilla.com/v1/geolocate?key=test",
+            f"https://www.googleapis.com/geolocation/v1/geolocate?key={api_key}",
             json=payload,
             timeout=5
         )
         response.raise_for_status()
-        print("Mozilla response", response)
         data = response.json()
         
         return {
@@ -184,7 +199,8 @@ def get_location_from_wifi():
             'city': None,  # We'll need to reverse geocode these coordinates
             'country_name': None
         }
-    except (requests.RequestException, KeyError):
+    except requests.RequestException as e:
+        print(f"Google Geolocation API error: {str(e)}")
         return None
 
 def get_location_info(lat, lon):
