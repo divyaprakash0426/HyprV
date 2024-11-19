@@ -342,15 +342,14 @@ def get_aqi(lat, lon):
         
         url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={api_key}"
         payload = {
-            "universalAqi": True,
             "location": {
                 "latitude": lat,
                 "longitude": lon
             },
             "extraComputations": [
-                "HEALTH_RECOMMENDATIONS",
                 "DOMINANT_POLLUTANT_CONCENTRATION",
-                "POLLUTANT_CONCENTRATION"
+                "POLLUTANT_CONCENTRATION",
+                "LOCAL_AQI"
             ],
             "languageCode": "en"
         }
@@ -358,10 +357,11 @@ def get_aqi(lat, lon):
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
         data = response.json()
+        print(data)
         
         # Get Universal AQI from indexes
         for index in data['indexes']:
-            if index['code'] == 'uaqi':
+            if index['code'] == 'ind_cpcb':
                 aqi = index['aqi']
                 category = index['category']
                 dominant_pollutant = index['dominantPollutant'].upper()
