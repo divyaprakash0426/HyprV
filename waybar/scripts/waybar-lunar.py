@@ -27,10 +27,19 @@ def get_location():
         return {"city": "Mumbai", "latitude": 19.0760, "longitude": 72.8777}
 
 def get_moon_phases():
-    """Calculate next full and new moon dates"""
-    now = ephem.now()
-    next_full = ephem.next_full_moon(now)
-    next_new = ephem.next_new_moon(now)
+    """Calculate next full and new moon dates for specific location"""
+    location = get_location()
+    observer = ephem.Observer()
+    observer.lat = str(location['latitude'])
+    observer.lon = str(location['longitude'])
+    observer.date = ephem.now()
+    
+    moon = ephem.Moon()
+    moon.compute(observer)
+    
+    # Calculate next full and new moons from the observer's location
+    next_full = ephem.next_full_moon(observer.date)
+    next_new = ephem.next_new_moon(observer.date)
     return next_full.datetime(), next_new.datetime()
 
 class DrikPanchangInfo:
@@ -61,12 +70,21 @@ class DrikPanchangInfo:
             return {}
 
 def get_current_moon_phase():
-    """Get current moon phase emoji"""
-    date = ephem.Date(datetime.now())
-    nnm = ephem.next_new_moon(date)
-    pnm = ephem.previous_new_moon(date)
+    """Get current moon phase emoji for specific location"""
+    location = get_location()
+    observer = ephem.Observer()
+    observer.lat = str(location['latitude'])
+    observer.lon = str(location['longitude'])
+    observer.date = ephem.now()
     
-    lunation = (date - pnm) / (nnm - pnm)
+    moon = ephem.Moon()
+    moon.compute(observer)
+    
+    # Calculate lunation using the observer's location
+    nnm = ephem.next_new_moon(observer.date)
+    pnm = ephem.previous_new_moon(observer.date)
+    
+    lunation = (observer.date - pnm) / (nnm - pnm)
     
     # Convert lunation to moon phase emoji
     if lunation < 0.125:
