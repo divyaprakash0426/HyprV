@@ -376,7 +376,7 @@ def get_aqi(lat, lon):
                 f"{pollutant['displayName']}: {conc['value']:.1f} {conc['units']}"
             )
             
-        result = [f"AQI: {aqi} ({category})"]
+        result = [f"{aqi} ({category})"]
         if pollutant_info:
             result.append(f"Dominant: {dominant_pollutant}")
             result.append("\nPollutants:")
