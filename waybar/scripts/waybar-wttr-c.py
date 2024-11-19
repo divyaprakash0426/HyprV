@@ -204,19 +204,46 @@ def get_location_from_wifi():
         return None
 
 def get_location_info(lat, lon):
-    """Get city and country information from coordinates"""
+    """Get city and country information from coordinates using Google Geocoding API"""
     try:
-        response = requests.get(f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json")
+        # Read Google Maps API key
+        api_key = None
+        with open(config_file, 'r') as f:
+            for line in f:
+                if line.startswith('GOOGLE_MAPS_API_KEY='):
+                    api_key = line.split('=')[1].strip().strip('"')
+                    break
+        if not api_key:
+            return {'city': 'Unknown', 'country_name': 'Unknown'}
+
+        response = requests.get(
+            f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lon}&key={api_key}"
+        )
         response.raise_for_status()
         data = response.json()
         
+        if data['status'] != 'OK' or not data['results']:
+            return {'city': 'Unknown', 'country_name': 'Unknown'}
+            
+        # Process address components
+        address_components = data['results'][0]['address_components']
+        city = None
+        country = None
+        
+        for component in address_components:
+            if 'locality' in component['types']:
+                city = component['long_name']
+            elif 'administrative_area_level_1' in component['types'] and not city:
+                # Use state/province if city not found
+                city = component['long_name']
+            elif 'country' in component['types']:
+                country = component['long_name']
+                
         return {
-            'city': data.get('address', {}).get('city') or 
-                   data.get('address', {}).get('town') or 
-                   data.get('address', {}).get('village'),
-            'country_name': data.get('address', {}).get('country')
+            'city': city or 'Unknown',
+            'country_name': country or 'Unknown'
         }
-    except (requests.RequestException, KeyError):
+    except (requests.RequestException, KeyError, FileNotFoundError):
         return {'city': 'Unknown', 'country_name': 'Unknown'}
 
 try:
