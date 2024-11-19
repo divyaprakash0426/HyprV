@@ -84,21 +84,18 @@ WEATHER_CODES = {
 # Initialize data dictionary for waybar output
 data = {}
 
-# Read config file for API key and city
+# Read config file for API key
 config_file = os.path.expanduser('~/.config/HyprV/hyprv.conf')
-city = None
 api_key = None
 
 try:
     with open(config_file, 'r') as f:
         for line in f:
-            if line.startswith('SET_CITY='):
-                city = line.split('=')[1].strip().strip('"')
-            elif line.startswith('OPENWEATHERMAP_API_KEY='):
+            if line.startswith('OPENWEATHERMAP_API_KEY='):
                 api_key = line.split('=')[1].strip().strip('"')
     
-    if not city or not api_key:
-        print(json.dumps({"text": "❌", "tooltip": "City or API key not set in hyprv.conf"}))
+    if not api_key:
+        print(json.dumps({"text": "❌", "tooltip": "API key not set in hyprv.conf"}))
         exit(0)
 except FileNotFoundError:
     print(json.dumps({"text": "❌", "tooltip": "hyprv.conf not found"}))
@@ -106,18 +103,13 @@ except FileNotFoundError:
 
 # Fetch current weather and forecast from OpenWeatherMap
 try:
-    # Get coordinates for the city
-    geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={city}&limit=1&appid={api_key}"
-    geo_response = requests.get(geo_url)
-    geo_response.raise_for_status()  # Raise exception for bad status codes
-    geo_data = geo_response.json()
+    # Get location from IP
+    ip_response = requests.get("https://ipapi.co/json/")
+    ip_response.raise_for_status()
+    location = ip_response.json()
     
-    if not geo_data:
-        print(json.dumps({"text": "❌", "tooltip": "City not found"}))
-        exit(0)
-        
-    lat = geo_data[0]['lat']
-    lon = geo_data[0]['lon']
+    lat = location['latitude']
+    lon = location['longitude']
     
     # Get current weather and forecast
     weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
