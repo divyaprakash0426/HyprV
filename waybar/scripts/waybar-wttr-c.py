@@ -9,6 +9,8 @@ import json
 import requests
 import os
 import pickle
+import subprocess
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -134,6 +136,65 @@ except FileNotFoundError:
 lat = None
 lon = None
 
+def get_wifi_networks():
+    """Get nearby WiFi networks using nmcli"""
+    try:
+        cmd = ["nmcli", "-t", "-f", "BSSID,SIGNAL", "dev", "wifi"]
+        output = subprocess.check_output(cmd, text=True)
+        
+        wifi_points = []
+        for line in output.strip().split('\n'):
+            if ':' in line:
+                bssid, signal = line.split(':')
+                wifi_points.append({
+                    "macAddress": bssid.strip(),
+                    "signalStrength": int(signal.strip())
+                })
+        return wifi_points
+    except (subprocess.SubprocessError, ValueError):
+        return []
+
+def get_location_from_wifi():
+    """Get location using Mozilla Location Service"""
+    wifi_points = get_wifi_networks()
+    if not wifi_points:
+        return None
+    
+    try:
+        payload = {"wifiAccessPoints": wifi_points}
+        response = requests.post(
+            "https://location.services.mozilla.com/v1/geolocate?key=test",
+            json=payload,
+            timeout=5
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        return {
+            'latitude': data['location']['lat'],
+            'longitude': data['location']['lng'],
+            'city': None,  # We'll need to reverse geocode these coordinates
+            'country_name': None
+        }
+    except (requests.RequestException, KeyError):
+        return None
+
+def get_location_info(lat, lon):
+    """Get city and country information from coordinates"""
+    try:
+        response = requests.get(f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json")
+        response.raise_for_status()
+        data = response.json()
+        
+        return {
+            'city': data.get('address', {}).get('city') or 
+                   data.get('address', {}).get('town') or 
+                   data.get('address', {}).get('village'),
+            'country_name': data.get('address', {}).get('country')
+        }
+    except (requests.RequestException, KeyError):
+        return {'city': 'Unknown', 'country_name': 'Unknown'}
+
 try:
     # Check cache first
     cached_data = load_cached_data()
@@ -142,21 +203,31 @@ try:
         lat = location['latitude']
         lon = location['longitude']
     else:
-        # Fetch current weather and forecast from OpenWeatherMap
-        # Get location from IP
-        try:
-            ip_response = requests.get("https://ipapi.co/json/")
-            ip_response.raise_for_status()
-            location = ip_response.json()
-        except requests.RequestException as e:
-            # If we have cached data and get a rate limit error, use cached location
-            if cached_data and "429" in str(e):
-                weather, location = cached_data
-            else:
-                raise  # Re-raise the exception if we don't have cached data
+        # Try WiFi-based location first
+        location = get_location_from_wifi()
         
-        lat = location['latitude']
-        lon = location['longitude']
+        if location:
+            lat = location['latitude']
+            lon = location['longitude']
+            # Get city and country info
+            location_info = get_location_info(lat, lon)
+            location['city'] = location_info['city']
+            location['country_name'] = location_info['country_name']
+        else:
+            # Fallback to IP-based location
+            try:
+                ip_response = requests.get("https://ipapi.co/json/")
+                ip_response.raise_for_status()
+                location = ip_response.json()
+                lat = location['latitude']
+                lon = location['longitude']
+            except requests.RequestException as e:
+                if cached_data and "429" in str(e):
+                    weather, location = cached_data
+                    lat = location['latitude']
+                    lon = location['longitude']
+                else:
+                    raise
         
         # Get current weather and forecast
         weather_url = f"https://api.openweathermap.org/data/3.0/onecall?lat={lat}&lon={lon}&exclude=minutely&units=metric&appid={api_key}"
