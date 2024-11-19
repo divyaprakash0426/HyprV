@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 """
-Waybar module for displaying moon phases and Ekadashi information
+Waybar module for displaying moon phases and Hindu calendar information using DrikPanchang
 """
 
 import json
-from datetime import datetime, timedelta
+import os
+from datetime import datetime
 import ephem
+from hindu_calendar import HinduCalendar
+
+CONFIG_DIR = os.path.expanduser("~/.config/waybar/scripts")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "drikpanchang_config.json")
 
 def get_moon_phases():
     """Calculate next full and new moon dates"""
@@ -14,15 +19,42 @@ def get_moon_phases():
     next_new = ephem.next_new_moon(now)
     return next_full.datetime(), next_new.datetime()
 
-def get_ekadashi_info():
-    """Calculate next Ekadashi dates and times"""
-    # Simplified placeholder implementation
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
     return {
-        'next_ekadashi': datetime.now() + timedelta(days=11),
-        'type': 'Utpanna Ekadashi',
-        'start_time': '05:32',
-        'end_time': '09:47'
+        "method": "marathi",
+        "city": "Mumbai",
+        "city_id": "1275339",
+        "regional_language": False
     }
+
+class DrikPanchangInfo:
+    def __init__(self):
+        config = load_config()
+        self.calendar = HinduCalendar(
+            method=config['method'],
+            regional_language=config['regional_language']
+        )
+        try:
+            self.calendar.set_city(config['city_id'], config['city'])
+        except Exception as e:
+            print(f"Error setting up city: {e}")
+
+    def get_today_info(self):
+        try:
+            date_obj = self.calendar.today()
+            return {
+                'tithi': date_obj['panchang'].get('Tithi', ''),
+                'nakshatra': date_obj['panchang'].get('Nakshatra', ''),
+                'yoga': date_obj['panchang'].get('Yoga', ''),
+                'event': date_obj.get('event', ''),
+                'regional_date': date_obj.get('regional_datestring', '')
+            }
+        except Exception as e:
+            print(f"Error getting panchang info: {e}")
+            return {}
 
 def get_current_moon_phase():
     """Get current moon phase emoji"""
@@ -45,20 +77,34 @@ def get_current_moon_phase():
         return "🌕"  # Full Moon
 
 def main():
+    # Get moon phase info
     next_full, next_new = get_moon_phases()
-    ekadashi = get_ekadashi_info()
+    current_phase = get_current_moon_phase()
+    
+    # Get DrikPanchang info
+    dp_info = DrikPanchangInfo()
+    today_info = dp_info.get_today_info()
+    
+    # Prepare tooltip text
+    tooltip = [
+        f"🌕 <b>Moon Phases</b>",
+        f"Current Phase: {current_phase}",
+        f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}",
+        f"Next New Moon: {next_new.strftime('%Y-%m-%d')}",
+        "",
+        f"📅 <b>Hindu Calendar</b>",
+        f"Date: {today_info.get('regional_date', '')}",
+        f"Tithi: {today_info.get('tithi', '')}",
+        f"Nakshatra: {today_info.get('nakshatra', '')}"
+    ]
+    
+    # Add event if present
+    if today_info.get('event'):
+        tooltip.extend(["", f"🎯 <b>Today's Event</b>", today_info['event']])
     
     data = {
-        "text": get_current_moon_phase(),
-        "tooltip": (
-            f"🌕 <b>Moon Phases</b>\n"
-            f"Next Full Moon: {next_full.strftime('%Y-%m-%d')}\n"
-            f"Next New Moon: {next_new.strftime('%Y-%m-%d')}\n\n"
-            f"🕉️ <b>Ekadashi</b>\n"
-            f"Next: {ekadashi['type']}\n"
-            f"Date: {ekadashi['next_ekadashi'].strftime('%Y-%m-%d')}\n"
-            f"Start: {ekadashi['start_time']}, End: {ekadashi['end_time']}"
-        )
+        "text": current_phase,
+        "tooltip": "\n".join(tooltip)
     }
     
     print(json.dumps(data))
