@@ -92,20 +92,37 @@ def get_current_moon_phase():
     # Calculate lunation using the observer's location
     nnm = ephem.next_new_moon(observer.date)
     pnm = ephem.previous_new_moon(observer.date)
+    nfm = ephem.next_full_moon(observer.date)
+    pfm = ephem.previous_full_moon(observer.date)
     
     lunation = (observer.date - pnm) / (nnm - pnm)
     
+    # Check if we're in waxing (New->Full) or waning (Full->New) phase
+    is_waxing = observer.date < nfm and observer.date > pnm
+    
     # Convert lunation to moon phase emoji and name
-    if lunation < 0.125:
-        return "🌑", "New Moon"
-    elif lunation < 0.375:
-        return "🌒", "Waxing Crescent"
-    elif lunation < 0.625:
-        return "🌓", "First Quarter"
-    elif lunation < 0.875:
-        return "🌔", "Waxing Gibbous"
+    if is_waxing:
+        if lunation < 0.125:
+            return "🌑", "New Moon"
+        elif lunation < 0.375:
+            return "🌒", "Waxing Crescent" 
+        elif lunation < 0.625:
+            return "🌓", "First Quarter"
+        elif lunation < 0.875:
+            return "🌔", "Waxing Gibbous"
+        else:
+            return "🌕", "Full Moon"
     else:
-        return "🌕", "Full Moon"
+        if lunation < 0.125:
+            return "🌑", "New Moon"
+        elif lunation < 0.375:
+            return "🌖", "Waning Gibbous"
+        elif lunation < 0.625:
+            return "🌗", "Last Quarter" 
+        elif lunation < 0.875:
+            return "🌘", "Waning Crescent"
+        else:
+            return "🌕", "Full Moon"
 
 def main():
     # Get moon phase info
