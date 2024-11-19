@@ -359,29 +359,41 @@ def get_aqi(lat, lon):
         data = response.json()
         print(data)
         
-        # Get Universal AQI from indexes
+        # Get both AQI indexes
+        uaqi_info = None
+        naqi_info = None
+        
         for index in data['indexes']:
-            if index['code'] == 'ind_cpcb':
-                aqi = index['aqi']
-                category = index['category']
-                dominant_pollutant = index['dominantPollutant'].upper()
-                break
-        else:
-            return "N/A"  # No UAQI found
+            if index['code'] == 'uaqi':
+                uaqi_info = index
+            elif index['code'] == 'ind_cpcb':
+                naqi_info = index
+        
+        if not naqi_info:
+            return "N/A"  # No NAQI found
             
+        # Format AQI information
+        result = []
+        
+        # Add NAQI (Indian AQI)
+        result.append(f"NAQI: {naqi_info['aqi']} ({naqi_info['category']})")
+        
+        # Add UAQI if available
+        if uaqi_info:
+            result.append(f"UAQI: {uaqi_info['aqi']} ({uaqi_info['category']})")
+        
+        # Add dominant pollutant
+        dominant_pollutant = naqi_info['dominantPollutant'].upper()
+        result.append(f"Dominant: {dominant_pollutant}")
+        
         # Get pollutant concentrations
-        pollutant_info = []
+        result.append("\nPollutants:")
         for pollutant in data.get('pollutants', []):
             conc = pollutant['concentration']
-            pollutant_info.append(
-                f"{pollutant['displayName']}: {conc['value']:.1f} {conc['units']}"
-            )
-            
-        result = [f"{aqi} ({category})"]
-        if pollutant_info:
-            result.append(f"Dominant: {dominant_pollutant}")
-            result.append("\nPollutants:")
-            result.extend(pollutant_info)
+            if pollutant['code'] == dominant_pollutant.lower():
+                result.append(f"➤ {pollutant['displayName']}: {conc['value']:.1f} {conc['units']}")
+            else:
+                result.append(f"  {pollutant['displayName']}: {conc['value']:.1f} {conc['units']}")
             
         return "\n".join(result)
     except Exception as e:
