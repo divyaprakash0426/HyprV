@@ -236,8 +236,8 @@ data['tooltip'] += f"Next: {ekadashi['type']}\n"
 data['tooltip'] += f"Date: {ekadashi['next_ekadashi'].strftime('%Y-%m-%d')}\n"
 data['tooltip'] += f"Start: {ekadashi['start_time']}, End: {ekadashi['end_time']}\n\n"
 
-# Daily forecast
-for i, day in enumerate(weather['daily'][:3]):
+# Daily forecast with hourly details
+for i, day in enumerate(weather['daily'][:2]):  # Only today and tomorrow
     data['tooltip'] += "\n<b>"
     forecast_date = datetime.fromtimestamp(day['dt'])
     if i == 0:
@@ -250,20 +250,26 @@ for i, day in enumerate(weather['daily'][:3]):
     data['tooltip'] += f"🌅 {datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')} "
     data['tooltip'] += f"🌇 {datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
 
-# Hourly forecast for next 24 hours
-current_hour = datetime.now().hour
-for hour in weather['hourly'][:24]:
-    hour_time = datetime.fromtimestamp(hour['dt'])
-    if hour_time.hour < current_hour - 2:
-        continue
+    # Get hourly data for this day
+    day_start = forecast_date.replace(hour=0, minute=0, second=0).timestamp()
+    day_end = forecast_date.replace(hour=23, minute=59, second=59).timestamp()
+    
+    for hour in weather['hourly']:
+        hour_time = datetime.fromtimestamp(hour['dt'])
         
-    weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
-    data['tooltip'] += (
-        f"{hour_time.strftime('%H:%M')} {weather_emoji} "
-        f"{format_temp(hour['temp'])} "
-        f"{hour['weather'][0]['description'].capitalize()}, "
-        f"{format_chances(hour)}\n"
-    )
+        # Only show hours for this day
+        if day_start <= hour['dt'] <= day_end:
+            # For today, skip past hours
+            if i == 0 and hour_time.hour < datetime.now().hour - 2:
+                continue
+                
+            weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
+            data['tooltip'] += (
+                f"{hour_time.strftime('%H:%M')} {weather_emoji} "
+                f"{format_temp(hour['temp'])} "
+                f"{hour['weather'][0]['description'].capitalize()}, "
+                f"{format_chances(hour)}\n"
+            )
 
 
 print(json.dumps(data))
