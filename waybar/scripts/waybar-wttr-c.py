@@ -357,33 +357,32 @@ def get_aqi(lat, lon):
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'})
         response.raise_for_status()
         data = response.json()
-        print(data)
         
         # Get both AQI indexes
         uaqi_info = None
-        naqi_info = None
+        local_info = None
         
         for index in data['indexes']:
             if index['code'] == 'uaqi':
                 uaqi_info = index
             elif index['code'] == 'ind_cpcb':
-                naqi_info = index
+                local_info = index
         
-        if not naqi_info:
+        if not local_info:
             return "N/A"  # No NAQI found
             
         # Format AQI information
         result = []
         
-        # Add NAQI (Indian AQI)
-        result.append(f"NAQI: {naqi_info['aqi']} ({naqi_info['category']})")
+        # Add Local AQI Info
+        result.append(f"AQI: {local_info['aqi']} ({local_info['category']})")
         
         # Add UAQI if available
         if uaqi_info:
             result.append(f"UAQI: {uaqi_info['aqi']} ({uaqi_info['category']})")
         
         # Add dominant pollutant
-        dominant_pollutant = naqi_info['dominantPollutant'].upper()
+        dominant_pollutant = local_info['dominantPollutant'].upper()
         result.append(f"Dominant: {dominant_pollutant}")
         
         # Get pollutant concentrations
