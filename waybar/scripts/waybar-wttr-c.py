@@ -232,7 +232,7 @@ data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {tem
 data['tooltip'] += f"Feels like: {feels_like:.1f}°\n"
 data['tooltip'] += f"Wind: {current['wind_speed']:.1f} m/s\n"
 data['tooltip'] += f"Humidity: {current['humidity']}%\n"
-data['tooltip'] += f"AQI: {aqi}/5\n\n"
+data['tooltip'] += f"AQI: {aqi}\n\n"
 
 # Add moon and Ekadashi section
 data['tooltip'] += "🌕 <b>Moon Phases</b>\n"
