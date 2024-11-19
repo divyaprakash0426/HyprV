@@ -135,7 +135,8 @@ tooltip label{
     border-left: 0px;
 }
 
-#custom-notification {
+#custom-notification,
+#custom-lunar {
     color: #407cdd;
     background: #e7e7ec;
     opacity: 0.8;

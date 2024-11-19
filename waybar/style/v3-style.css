@@ -129,7 +129,8 @@ tooltip label{
     border-right: 0px;
 }
 
-#custom-notification {
+#custom-notification,
+#custom-lunar {
     color: #407cdd;
     border-radius: 10px;
     margin-right: 10px;
