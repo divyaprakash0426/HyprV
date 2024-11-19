@@ -254,6 +254,7 @@ for i, day in enumerate(weather['daily'][:2]):  # Only today and tomorrow
     day_start = forecast_date.replace(hour=0, minute=0, second=0).timestamp()
     day_end = forecast_date.replace(hour=23, minute=59, second=59).timestamp()
     
+    # Show forecasts every 3 hours
     for hour in weather['hourly']:
         hour_time = datetime.fromtimestamp(hour['dt'])
         
@@ -263,13 +264,15 @@ for i, day in enumerate(weather['daily'][:2]):  # Only today and tomorrow
             if i == 0 and hour_time.hour < datetime.now().hour - 2:
                 continue
                 
-            weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
-            data['tooltip'] += (
-                f"{hour_time.strftime('%H:%M')} {weather_emoji} "
-                f"{format_temp(hour['temp'])} "
-                f"{hour['weather'][0]['description'].capitalize()}, "
-                f"{format_chances(hour)}\n"
-            )
+            # Only show forecasts every 3 hours
+            if hour_time.hour % 3 == 0:
+                weather_emoji = get_weather_emoji(hour['weather'][0]['id'])
+                data['tooltip'] += (
+                    f"{hour_time.strftime('%H:%M')} {weather_emoji} "
+                    f"{format_temp(hour['temp'])} "
+                    f"{hour['weather'][0]['description'].capitalize()}, "
+                    f"{format_chances(hour)}\n"
+                )
 
 
 print(json.dumps(data))
