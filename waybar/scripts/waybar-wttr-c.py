@@ -342,6 +342,7 @@ def get_aqi(lat, lon):
         
         url = f"https://airquality.googleapis.com/v1/currentConditions:lookup?key={api_key}"
         payload = {
+            "universalAqi": True,
             "location": {
                 "latitude": lat,
                 "longitude": lon
@@ -421,10 +422,8 @@ aqi = get_aqi(lat, lon)
 # Create a compact tooltip with current conditions
 data['tooltip'] = f"<b>{location['city']}, {location['country_name']}</b>\n"
 data['tooltip'] += f"<b>{current['weather'][0]['description'].capitalize()} {temp:.1f}°</b>\n"
-data['tooltip'] += f"Feels: {feels_like:.1f}° | Wind: {current['wind_speed']:.1f}m/s | Hum: {current['humidity']}%\n"
-data['tooltip'] += "─" * 30 + "\n"  # Separator
+data['tooltip'] += f"Feels: {feels_like:.1f}° | Wind: {current['wind_speed']:.1f}m/s | Humidity: {current['humidity']}%\n"
 data['tooltip'] += f"{aqi}\n"
-data['tooltip'] += "─" * 30 + "\n"  # Separator
 
 
 # Detailed forecast with hourly details for today and tomorrow
@@ -451,7 +450,7 @@ for i, day in enumerate(weather['daily'][:5]):  # Process 5 days
         data['tooltip'] += f" | 🌅{datetime.fromtimestamp(day['sunrise']).strftime('%H:%M')}"
         data['tooltip'] += f" 🌇{datetime.fromtimestamp(day['sunset']).strftime('%H:%M')}\n"
     else:
-        data['tooltip'] += f" | 💧{int(day.get('pop', 0) * 100)}%\n"  # Precipitation probability for later days
+        data['tooltip'] += f" | 💧{int(day.get('pop', 0) * 100)}%"  # Precipitation probability for later days
         continue  # Skip hourly details for days after tomorrow
 
     # Hourly details only for today and tomorrow
