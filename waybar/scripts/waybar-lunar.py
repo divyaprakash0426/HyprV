@@ -6,7 +6,7 @@ Waybar module for displaying moon phases and Hindu calendar information using Dr
 import json
 import os
 import pickle
-from datetime import datetime
+from datetime import datetime, timedelta
 import ephem
 from hindu_calendar import HinduCalendar
 from pathlib import Path
@@ -63,7 +63,7 @@ class DrikPanchangInfo:
             today = datetime.now()
             # Look ahead up to 30 days to find next Ekadashi
             for i in range(30):
-                future_date = (today.date() + ephem.Date(i)).strftime("%d/%m/%Y")
+                future_date = (today + timedelta(days=i)).strftime("%d/%m/%Y")
                 date_obj = self.calendar.get_date(future_date)
                 panchang = date_obj.get('panchang', {})
                 tithi = panchang.get('Tithi', '')
