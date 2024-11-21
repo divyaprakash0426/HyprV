@@ -57,16 +57,40 @@ class DrikPanchangInfo:
             # Fallback to Mumbai if there's an error
             self.calendar.set_city('1275339', 'Mumbai')
 
+    def get_next_ekadashi(self):
+        """Get the next Ekadashi date and name"""
+        try:
+            today = datetime.now()
+            # Look ahead up to 30 days to find next Ekadashi
+            for i in range(30):
+                future_date = (today.date() + ephem.Date(i)).strftime("%d/%m/%Y")
+                date_obj = self.calendar.get_date(future_date)
+                panchang = date_obj.get('panchang', {})
+                tithi = panchang.get('Tithi', '')
+                if 'Ekadashi' in tithi:
+                    return {
+                        'date': future_date,
+                        'name': tithi.split(' ')[0],  # Get Ekadashi name
+                        'full_tithi': tithi.split(' upto ')[0]
+                    }
+            return None
+        except Exception as e:
+            print(f"Error getting Ekadashi info: {e}")
+            return None
+
     def get_today_info(self):
         try:
             date_obj = self.calendar.today()
             panchang = date_obj.get('panchang', {})
+            next_ekadashi = self.get_next_ekadashi()
+            
             return {
                 'tithi': panchang.get('Tithi', '').split(' upto ')[0],  # Remove "upto" time
                 'nakshatra': panchang.get('Nakshatra', '').split(' upto ')[0],
                 'yoga': panchang.get('Yoga', '').split(' upto ')[0],
                 'event': date_obj.get('event', ''),
-                'regional_date': date_obj.get('regional_datestring', '')
+                'regional_date': date_obj.get('regional_datestring', ''),
+                'next_ekadashi': next_ekadashi
             }
         except Exception as e:
             print(f"Error getting panchang info: {e}")
@@ -150,6 +174,16 @@ def main():
         f"Nakshatra: {today_info.get('nakshatra', '')}"
     ]
     
+    # Add next Ekadashi info
+    next_ekadashi = today_info.get('next_ekadashi')
+    if next_ekadashi:
+        tooltip.extend([
+            "",
+            f"🌙 <b>Next Ekadashi</b>",
+            f"{next_ekadashi['name']}",
+            f"Date: {datetime.strptime(next_ekadashi['date'], '%d/%m/%Y').strftime('%Y-%m-%d')}"
+        ])
+
     # Add event if present
     if today_info.get('event'):
         tooltip.extend(["", f"🎯 <b>Today's Event</b>", today_info['event']])
